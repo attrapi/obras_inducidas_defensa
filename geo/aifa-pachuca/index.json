@@ -1,0 +1,13 @@
+{
+  "label": "AIFA - Pachuca",
+  "fuente": "AIFA-Pachuca.kml",
+  "capas": [
+    {
+      "key": "ddv",
+      "label": "Derecho de vía (DDV)",
+      "file": "ddv.geojson",
+      "count": 1,
+      "default": true
+    }
+  ]
+}

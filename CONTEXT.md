@@ -67,50 +67,52 @@ Versión previa en producción: `https://attrapi.github.io/Obras_inducidas_tramo
 
 ## 4. Estado actual del sistema (qué está hecho)
 
-El sistema Tramo II ya tiene implementado:
-
-**Datos:**
-- Carga CSV-driven con `fetch` (actualmente archivo estático `TramoII.csv`).
+**Datos de obras inducidas:**
+- Carga CSV-driven desde Google Sheets publicado, con catálogo en
+  `config/data-sources.js` (menú "Proyectos" construido automáticamente).
 - Parser CSV manual con manejo de comillas y comas escapadas.
-- Detección de encoding (windows-1252 con fallback iso-8859-1).
-- Normalización de estatus (`GESTIÓN / EJECUCIÓN` → `Gestión / Ejecución`, etc.).
-- Modelo de 19 campos por obra: id, proyecto, tramo, pk_ini, pk_fin, estado, municipio, lat_ini, lon_ini, lat_fin, lon_fin, ente, tipo_activo, tipo_obra, descripcion, criticidad, riesgo, responsable, estatus, utm_ie, utm_in.
+- Dos adapters: `estandar` (obras inducidas) e `inah` (vestigios arqueológicos,
+  UTM 14N y agrupamiento de vértices V1/V2/V3 como polígono cerrado).
+- Normalización de estatus, criticidad y tipo de obra (alias por acentos).
+- Modelo de 19 campos por obra.
 
-**Visualización:**
-- Mapa Leaflet con basemap CartoDB Voyager.
-- KML del trazo ferroviario (polilínea con ~480 vértices).
-- Marcadores PK cada 10 km con labels.
-- 11 tipos de obras inducidas con simbología SVG personalizada (Media Tensión, Telecomunicaciones, Gasoducto, Alta Tensión, Servicios Municipales, Drenaje, Servicios Privados, Hidrocarburo, Agua Potable, Baja Tensión, INAH).
-- Obras como puntos o líneas según geometría (lat_ini ≠ lat_fin).
-- Tamaño dinámico de íconos según criticidad.
-- Anillo animado tipo radar (`@keyframes ripple`) cuando se filtra por proyecto.
-- Toggle KML on/off.
+**Cartografía (`geo/`):**
+- Los KML/KMZ de `KMZ/` se convierten a GeoJSON con `tools/kml-to-geojson.py`:
+  un archivo por capa más un `index.json` por corredor. Ver `geo/README.md`.
+- Panel "Capas del proyecto" en la caja de leyenda: hace doble función de
+  leyenda (el swatch replica el estilo real) y de control de encendido.
+- Carga en diferido: al abrir un corredor solo bajan las capas `default`
+  (trazo / DDV); las demás llegan al prenderlas.
+- Capas disponibles hoy: trazo/envolvente, DDV, liberados, cadenamientos,
+  frentes, parcelas, núcleo agrario, propiedad privada, antecedentes de
+  títulos y de decretos DOF.
+- Popup por geometría con los atributos que traía el KML.
+- Etiquetas de kilómetro derivadas de los cadenamientos, gateadas a zoom >= 11.
+- Las geometrías NO se simplifican: son datos de tenencia usados para defensa.
+
+**Visualización de obras:**
+- Mapa Leaflet con basemap Esri World Street Map.
+- 11 tipos de obras inducidas con simbología SVG personalizada.
+- Obras como puntos, líneas o polígonos según geometría.
+- Tamaño dinámico de íconos según criticidad y anillo de estatus.
 
 **Analítica:**
-- 6 contadores en vivo: total, críticas, identificadas, gestionadas, concluidas, suspendidas.
-- Recálculo automático con cada filtro.
+- 6 contadores en vivo: total, críticas, identificadas, gestionadas,
+  concluidas, suspendidas. Recálculo automático con cada filtro.
 
 **Navegación:**
 - 5 filtros encadenados: proyecto, ente, criticidad, riesgo, estatus.
-- Slider doble de rango PK con tracking visual y autoswap.
+- Slider doble de rango PK con autoswap. Su rango sale de las obras cargadas
+  y, cuando todavía no hay hoja cableada, de los cadenamientos del corredor.
 - Leyenda clickeable que actúa como filtro rápido.
-- Selector de "pildora" multi-proyecto (Tramo I, Tramo II, Segmento 16-17, Segmento 15b).
+- Menú jerárquico de proyectos construido desde `config/data-sources.js`.
 
 **Detalle:**
-- Modal con 11 campos de ficha técnica.
-- Badges con código de color por estatus.
-- Sección dual WGS84 / UTM Zona 14N.
-- Botón "Descargar Ficha" (PDF impreso por nueva ventana).
-- Botón "Descargar Fichero" (captura completa del mapa con html2canvas + jsPDF).
+- Modal con ficha técnica, badges por estatus, sección dual WGS84 / UTM 14N.
+- "Descargar Ficha" (PDF) y "Descargar Fichero" (captura del mapa).
 
 **Responsive:**
-- Breakpoint 768px.
-- FABs flotantes para abrir/cerrar drawers en móvil.
-- Scroll horizontal de stats sin scrollbar visible.
-- Modal adaptado a viewports pequeños.
-- Cierre por click en mapa.
-
----
+- Breakpoint 768px, FABs flotantes para drawers en móvil, modal adaptado.
 
 ## 5. Próximos pasos acordados (en orden de prioridad)
 
@@ -126,19 +128,21 @@ El sistema Tramo II ya tiene implementado:
 
 **Importante:** Google Sheets publicado tarda **unos minutos en propagar cambios**. Esto se debe comunicar al equipo que actualice los datos.
 
-### Tarea 2: Integración de proyecto Saltillo-Monterrey
+### Tarea 2: Cablear las hojas de Google Sheets de los tres corredores
 
-Tres CSVs publicados que conviven en el mismo tramo geográfico:
-- **Seg 13-14:** obras inducidas estándar (mismo esquema que Tramo II, presumiblemente).
-- **INAH dataset 1:** hallazgos arqueológicos (esquema posiblemente distinto).
-- **INAH dataset 2:** otro conjunto de hallazgos INAH (esquema posiblemente distinto).
+El repo de defensa quedó acotado a **tres corredores**: México - Querétaro,
+AIFA - Pachuca e Irapuato - Guadalajara. Los proyectos anteriores
+(Querétaro-Irapuato, Saltillo-Monterrey, Monterrey-Nuevo Laredo) se retiraron
+de este repo junto con su cartografía cableada; viven en el repo previo.
 
-**Decisión arquitectónica pendiente:** confirmar si los CSVs del INAH comparten esquema con el de obras inducidas, o si requieren un modelo paralelo. Hipótesis fuerte: los CSVs del INAH tienen estructura distinta (campos arqueológicos: época, tipo de vestigio, número de inventario, etc.), por lo que conviene tratarlos como **capa separada con render unificado** — se ven juntos en el mapa pero internamente son entidades distintas con fichas técnicas distintas.
+Hoy los tres corredores ya tienen **cartografía** (ver sección 4) pero ninguno
+tiene **hoja de obras**: las tres entradas de `config/data-sources.js` están con
+`url: null`. Cablear cada una es pegar la URL publicada como CSV; el esquema y
+los adapters no cambian.
 
-URLs publicadas (confirmar al integrar):
-- Seg 13-14: `https://docs.google.com/spreadsheets/d/e/2PACX-1vQCXuNre9SGM6RGnZ5aAco1ztzIpY03LURR32NpE2E6SlHjYtZHmIarlay5mFpkdQ/pub?gid=800038218&single=true&output=csv`
-- INAH 1: `https://docs.google.com/spreadsheets/d/e/2PACX-1vSbks6OG9F4SH1Ue_9qt3-4mk2A9arGzQKEXRHFGw5lq0r3H4u8NlbfSOJIG1ZYXg/pub?gid=60031769&single=true&output=csv`
-- INAH 2: `https://docs.google.com/spreadsheets/d/e/2PACX-1vSuhlYtmT4G7Z9sokHn2n1tLmB5eJvB0j4O93KrDDIpHWEi1ZqTznfmgtImfSRF6w/pub?gid=1646263905&single=true&output=csv`
+Decisión arquitectónica ya tomada: cartografía y obras son independientes. Un
+corredor se puede abrir y navegar con solo su trazo, sin hoja cableada todavía
+(y al revés). Ver `selectNode()` en `index.html`.
 
 ### Tarea 3: Permalinks de vistas
 
@@ -165,35 +169,26 @@ Apps Script que guarda automáticamente cada lunes un snapshot del estado actual
 ## 6. Estructura propuesta del repo nuevo
 
 ```
-sistema-obras-inducidas/
-├── index.html                     # Punto de entrada (refactor del actual)
-├── README.md                      # Documentación de uso, actualización de datos
+obras_inducidas-defensa/
+├── index.html                     # Monolito actual (mapa + filtros + capas)
 ├── CONTEXT.md                     # Este archivo
 ├── config/
-│   └── data-sources.js            # URLs CSV por proyecto/tramo
-├── css/
-│   └── styles.css                 # CSS extraído del HTML monolítico
-├── js/
-│   ├── core/
-│   │   ├── data-loader.js         # Carga y parseo de CSVs (PapaParse)
-│   │   ├── map.js                 # Inicialización Leaflet + KML + PK
-│   │   ├── filters.js             # Lógica de filtros y permalinks
-│   │   └── modal.js               # Modal de ficha técnica
-│   ├── layers/
-│   │   ├── obras-inducidas.js     # Render de obras estándar
-│   │   └── inah.js                # Render de hallazgos arqueológicos
-│   ├── analytics/
-│   │   ├── counters.js            # Contadores en vivo
-│   │   └── dashboard.js           # Gráficas Chart.js (Tarea 5)
-│   └── export/
-│       ├── pdf.js                 # Exportación PDF (ya existente)
-│       └── table.js               # Vista tabla y exportación CSV (Tarea 4)
-└── assets/
-    ├── kml/
-    │   ├── tramo-ii.kml
-    │   └── saltillo-monterrey.kml
-    └── favicon.svg
+│   └── data-sources.js            # Catálogo: hojas CSV + carpeta geo por corredor
+├── KMZ/                           # KML/KMZ originales (fuente de verdad)
+│   ├── Mexico-Queretaro.kmz
+│   ├── AIFA-Pachuca.kml
+│   └── Irapuato-Guadalajara.kml
+├── geo/                           # GENERADO desde KMZ/ — ver geo/README.md
+│   ├── README.md
+│   ├── mexico-queretaro/
+│   ├── aifa-pachuca/
+│   └── irapuato-guadalajara/
+└── tools/
+    └── kml-to-geojson.py          # Convertidor KML/KMZ -> GeoJSON por capa
 ```
+
+La meta de refactorización (separar css/, js/core/, js/layers/, js/export/)
+sigue en pie y se hace progresivamente, no en un solo commit.
 
 Esta estructura es la **meta**. La refactorización se hace progresivamente, no en un solo commit. El código monolítico actual se va dividiendo conforme se trabaja en cada tarea.
 
@@ -221,11 +216,19 @@ Esta estructura es la **meta**. La refactorización se hace progresivamente, no 
 
 ---
 
-## 9. Estado al momento de creación de este archivo
+## 9. Bitácora
 
-**Fecha:** 20 de mayo de 2026
-**Próximo paso inmediato:** Tarea 1 — migrar Tramo II a Google Sheets en vivo.
-**Hoja de Tramo II en Google Sheets:** PENDIENTE — Dan debe subir el `TramoII.csv` actual a una hoja de Google y publicarla como CSV. La URL resultante reemplaza al archivo estático.
+**20 de mayo de 2026** — creación de este archivo. Próximo paso: migrar
+Tramo II a Google Sheets en vivo.
+
+**1 de octubre de 2026** — el repo se acota a la cartera de defensa. Se
+retiraron los proyectos Querétaro-Irapuato, Saltillo-Monterrey y
+Monterrey-Nuevo Laredo del catálogo, junto con el trazo KML y los
+cadenamientos que estaban hardcodeados en `index.html`. Quedan tres
+corredores: México - Querétaro, AIFA - Pachuca e Irapuato - Guadalajara.
+Se agregó la cartografía de los tres desde sus KML/KMZ, con panel de capas
+y carga en diferido. **Pendiente inmediato:** cablear las URLs publicadas de
+Google Sheets de los tres corredores (hoy `url: null`).
 
 ---
 

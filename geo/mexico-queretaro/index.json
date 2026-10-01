@@ -1,0 +1,69 @@
+{
+  "label": "México - Querétaro",
+  "fuente": "Mexico-Queretaro.kmz",
+  "capas": [
+    {
+      "key": "trazo",
+      "label": "Trazo / envolvente de afectación",
+      "file": "trazo.geojson",
+      "count": 2363,
+      "default": true
+    },
+    {
+      "key": "liberados",
+      "label": "Liberados",
+      "file": "liberados.geojson",
+      "count": 180,
+      "default": false
+    },
+    {
+      "key": "cadenamientos",
+      "label": "Cadenamientos PK",
+      "file": "cadenamientos.geojson",
+      "count": 11320,
+      "default": false
+    },
+    {
+      "key": "frentes",
+      "label": "Frentes",
+      "file": "frentes.geojson",
+      "count": 13,
+      "default": false
+    },
+    {
+      "key": "parcelas",
+      "label": "Parcelas",
+      "file": "parcelas.geojson",
+      "count": 778,
+      "default": false
+    },
+    {
+      "key": "nucleo-agrario",
+      "label": "Núcleo agrario",
+      "file": "nucleo-agrario.geojson",
+      "count": 75,
+      "default": false
+    },
+    {
+      "key": "propiedad-privada",
+      "label": "Propiedad privada",
+      "file": "propiedad-privada.geojson",
+      "count": 508,
+      "default": false
+    },
+    {
+      "key": "antecedentes-titulos",
+      "label": "Antecedentes: títulos",
+      "file": "antecedentes-titulos.geojson",
+      "count": 550,
+      "default": false
+    },
+    {
+      "key": "antecedentes-decretos",
+      "label": "Antecedentes: decretos DOF",
+      "file": "antecedentes-decretos.geojson",
+      "count": 24,
+      "default": false
+    }
+  ]
+}

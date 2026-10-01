@@ -1,0 +1,13 @@
+{
+  "label": "Irapuato - Guadalajara",
+  "fuente": "Irapuato-Guadalajara.kml",
+  "capas": [
+    {
+      "key": "trazo",
+      "label": "Trazo / envolvente de afectación",
+      "file": "trazo.geojson",
+      "count": 2,
+      "default": true
+    }
+  ]
+}
