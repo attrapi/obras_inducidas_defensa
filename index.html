@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obras Inducidas - ATTRAPI</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPGRlZnM+PGNsaXBQYXRoIGlkPSJjIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNiIvPjwvY2xpcFBhdGg+PC9kZWZzPgogIDxnIGNsaXAtcGF0aD0idXJsKCNjKSI+CiAgICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNiIgZmlsbD0iIzZiN2ExZSIvPgogICAgPHJlY3QgeD0iMTIuNiIgeT0iMCIgd2lkdGg9IjYuOCIgaGVpZ2h0PSIzMiIgZmlsbD0iI0ZGQzEwNyIvPgogICAgPHJlY3QgeD0iMTIuNiIgeT0iMCIgd2lkdGg9IjEuNiIgaGVpZ2h0PSIzMiIgZmlsbD0iI0ZGOEYwMCIgb3BhY2l0eT0iMC41NSIvPgogICAgPGcgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC43NSI+CiAgICAgIDxyZWN0IHg9IjMuNSIgeT0iMTAuNSIgd2lkdGg9IjIuMiIgaGVpZ2h0PSIxMSIgcng9IjAuNiIvPgogICAgICA8cmVjdCB4PSI4LjUiIHk9IjEwLjUiIHdpZHRoPSIyLjIiIGhlaWdodD0iMTEiIHJ4PSIwLjYiLz4KICAgICAgPHJlY3QgeD0iMjEuMyIgeT0iMTAuNSIgd2lkdGg9IjIuMiIgaGVpZ2h0PSIxMSIgcng9IjAuNiIvPgogICAgICA8cmVjdCB4PSIyNi4zIiB5PSIxMC41IiB3aWR0aD0iMi4yIiBoZWlnaHQ9IjExIiByeD0iMC42Ii8+CiAgICA8L2c+CiAgICA8cmVjdCB4PSIxIiB5PSIxMS44IiB3aWR0aD0iMzAiIGhlaWdodD0iMi40IiByeD0iMS4yIiBmaWxsPSIjZmZmIi8+CiAgICA8cmVjdCB4PSIxIiB5PSIxNy44IiB3aWR0aD0iMzAiIGhlaWdodD0iMi40IiByeD0iMS4yIiBmaWxsPSIjZmZmIi8+CiAgPC9nPgo8L3N2Zz4K">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+<script src="config/data-sources.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5}
+#map{width:100%;height:100vh}
+.header{position:absolute;top:0;left:0;right:0;z-index:1100;background:linear-gradient(135deg,#6b7a1e,#4a5a10);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,0.12)}
+.header h1{color:#fff;font-size:18px;font-weight:600}
+.header .subtitle{color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px}
+.stats{display:flex;gap:16px}
+.stat{text-align:center;padding:4px 10px;background:rgba(255,255,255,0.18);border-radius:8px;border:1px solid rgba(255,255,255,0.12)}
+.stat-num{color:#fff;font-size:17px;font-weight:700}
+.stat-label{color:rgba(255,255,255,0.7);font-size:9px;text-transform:uppercase;letter-spacing:0.4px}
+.legend{position:absolute;bottom:30px;left:14px;z-index:1000;background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width:220px;display:flex;flex-direction:column;max-height:calc(100vh - 120px)}
+#legend-items{overflow-y:auto;min-height:0}
+.legend h3{color:#222;font-size:13px;margin-bottom:10px;font-weight:600}
+.legend-item{display:flex;align-items:center;gap:8px;margin:5px 0;cursor:pointer;padding:3px 4px;border-radius:4px;transition:background 0.2s}
+.legend-item:hover{background:rgba(0,0,0,0.04)}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.legend-line{width:22px;height:3px;border-radius:2px;flex-shrink:0}
+.legend-text{color:#444;font-size:11px}
+.legend-count{color:#999;font-size:10px;margin-left:auto}
+.panel{position:absolute;top:80px;right:14px;z-index:1000;background:#fff;border-radius:12px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,0.1);width:280px;max-height:calc(100vh - 120px);overflow-y:auto}
+.panel h3{color:#222;font-size:13px;margin-bottom:10px;font-weight:600}
+.filter-group{margin-bottom:12px}
+.filter-label{color:#666;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.filter-select{width:100%;padding:6px 10px;background:#f0f4f8;color:#333;border:1px solid #ddd;border-radius:6px;font-size:12px;outline:none;cursor:pointer;color-scheme:light;-webkit-appearance:auto;appearance:auto}
+.filter-select:focus{border-color:#1a73e8}
+.pk-slider-wrap{padding:2px 0}
+.pk-slider-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#333;font-weight:600}
+.pk-slider-box{position:relative;height:22px;margin:0 4px}
+.pk-track-bg{position:absolute;top:9px;left:0;right:0;height:4px;background:#ddd;border-radius:2px}
+.pk-track-fill{position:absolute;top:9px;height:4px;background:#6b7a1e;border-radius:2px;pointer-events:none}
+.pk-slider-box input[type=range]{position:absolute;width:100%;top:0;height:22px;background:none;pointer-events:none;-webkit-appearance:none;appearance:none;margin:0;padding:0}
+.pk-slider-box input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#6b7a1e;cursor:pointer;pointer-events:all;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.25)}
+.pk-slider-box input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#6b7a1e;cursor:pointer;pointer-events:all;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);box-sizing:border-box}
+.pk-slider-box input[type=range]::-webkit-slider-runnable-track{background:none}
+.pk-slider-box input[type=range]::-moz-range-track{background:none}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:2000;display:none;align-items:center;justify-content:center}
+.overlay.active{display:flex}
+.info-modal{background:#fff;border-radius:16px;width:520px;max-width:95vw;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.info-header{padding:12px 20px;background:#1a73e8;color:#fff;position:relative}
+.info-header h4{font-size:15px;font-weight:400;color:#fff;padding-right:30px}
+.info-header .info-id{font-size:11px;margin-top:3px;color:rgba(255,255,255,0.85);font-weight:400}
+.info-body{padding:14px 20px}
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #f0f0f0}
+.info-row:last-child{border:none}
+.info-key{color:#888;font-size:12px;min-width:100px}
+.info-val{color:#222;font-size:12px;font-weight:400;text-align:right;max-width:260px}
+.info-val.critico{color:#e53935;font-weight:700}
+.info-val.alto{color:#ef6c00}
+.info-val.medio{color:#f9a825}
+.info-val.bajo{color:#43a047}
+.estatus-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.estatus-identificada{background:#ffebee;color:#c62828}
+.estatus-gestion{background:#fff3e0;color:#e65100}
+.estatus-ejecucion{background:#e8f5e9;color:#2e7d32}
+.estatus-concluida{background:#e8f5e9;color:#2e7d32}
+.estatus-suspendida{background:#f3e5f5;color:#6a1b9a}
+.close-btn{position:absolute;top:14px;right:16px;color:#fff;background:rgba(255,255,255,0.2);border:none;font-size:18px;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background 0.2s}
+.close-btn:hover{background:rgba(255,255,255,0.35)}
+.download-btn{position:absolute;top:12px;right:52px;color:#fff;background:rgba(255,255,255,0.2);border:none;cursor:pointer;padding:4px 10px;border-radius:12px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;transition:background 0.2s}
+.download-btn:hover{background:rgba(255,255,255,0.35)}
+.download-btn svg{width:13px;height:13px;fill:#fff;flex-shrink:0}
+@media print{body>*{display:none!important}.print-only{display:block!important;position:static!important;width:100%!important;box-shadow:none!important;border-radius:0!important}}
+.est-ring{position:absolute;border-radius:50%;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes ripple{0%{transform:translate(-50%,-50%) scale(1);opacity:0.9}100%{transform:translate(-50%,-50%) scale(2.4);opacity:0}}
+.est-ring{animation:ripple 1.8s ease-out infinite}
+.municipio-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.badge{padding:3px 8px;border-radius:10px;font-size:10px;color:#4a5a10;background:#e4ebb8;cursor:pointer;transition:all 0.2s}
+.badge.active{background:#6b7a1e;color:#fff}
+.badge:hover{transform:scale(1.05)}
+.pk-label{background:#fff;border:2px solid #555;border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700;color:#333;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.utm-row{background:#f8f9fa;border-radius:6px;padding:8px 10px;margin-top:4px}
+.utm-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.3px}
+.utm-val{font-size:13px;color:#1a73e8;font-weight:600;font-family:'Consolas',monospace}
+.toggle-track{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid #eee}
+.toggle-label{font-size:11px;color:#444}
+.switch{position:relative;width:36px;height:20px;background:#ccc;border-radius:10px;cursor:pointer;transition:background 0.3s}
+.switch.on{background:#e53935}
+.switch-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 0.2s}
+.switch.on .switch-knob{left:18px}
+.project-bubble{position:relative;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.45);border-radius:20px;padding:4px 12px;cursor:pointer;font-size:13px;font-weight:600;color:#fff;user-select:none;transition:background 0.2s}
+.project-bubble:hover{background:rgba(255,255,255,0.3)}
+.project-menu{display:none;position:absolute;top:calc(100% + 8px);left:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.15);min-width:240px;z-index:2000;padding:4px 0}
+.project-menu.open{display:block}
+.project-option{padding:9px 16px;font-size:12px;color:#444;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap;user-select:none}
+.project-option:hover{background:#f5f5f5}
+.project-option.active{color:#6b7a1e;font-weight:700;background:#f0f4e0}
+.project-option.disabled{color:#bbb;cursor:not-allowed}
+.project-option.disabled:hover{background:transparent}
+.project-option.has-children .chev{font-size:9px;color:#999;transition:transform 0.15s}
+.project-option.has-children.expanded .chev{transform:rotate(90deg)}
+.project-children{visibility:hidden;opacity:0;pointer-events:none;position:absolute;left:100%;top:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.15);padding:4px 0;min-width:200px;margin-left:6px;z-index:2001;transform:translateX(-6px);transition:opacity 0.15s ease,transform 0.15s ease,visibility 0s linear 0.15s}
+.project-children.expanded{visibility:visible;opacity:1;pointer-events:auto;transform:translateX(0);transition:opacity 0.15s ease,transform 0.15s ease}
+.project-children .project-option{padding-left:16px;font-size:11.5px}
+.project-children .project-children .project-option{padding-left:16px;font-size:11px}
+.project-empty{padding:8px 16px;font-size:10.5px;color:#aaa;font-style:italic;cursor:default}
+.project-load-status{display:none;padding:6px 14px;font-size:11px;color:#fff;background:rgba(0,0,0,0.25);border-radius:14px;margin-left:8px;align-items:center;gap:6px}
+.project-load-status.visible{display:inline-flex}
+.project-load-status .spinner{width:10px;height:10px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fab{display:none}
+@media (max-width:768px){
+.project-children{display:none;visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:none;position:static;box-shadow:none;margin-left:0;background:#fafafa;border-left:2px solid #e4ebb8;border-radius:0;min-width:0;padding:0}
+.project-children.expanded{display:block}
+.project-children .project-option{padding-left:28px}
+.project-children .project-children .project-option{padding-left:40px}
+}
+@media (max-width:768px){
+.header{padding:10px 12px;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.header h1{font-size:15px!important}
+.project-bubble{font-size:11px;padding:3px 10px}
+.stats{gap:8px;flex:1 1 100%;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding:2px 0;scrollbar-width:none;justify-content:flex-start}
+.stats::-webkit-scrollbar{display:none}
+.stat{flex-shrink:0;padding:3px 8px}
+.stat-num{font-size:14px}
+.stat-label{font-size:8px}
+.panel{top:135px;right:14px;bottom:14px;left:auto;width:min(320px,calc(100vw - 28px));max-height:none;transform:translateX(calc(100% + 30px));transition:transform 0.3s ease;padding:14px}
+.panel.mobile-open{transform:translateX(0)}
+.legend{top:135px;left:14px;bottom:auto;max-width:min(260px,calc(100vw - 28px));max-height:calc(100vh - 160px);overflow-y:auto;transform:translateX(calc(-100% - 30px));transition:transform 0.3s ease}
+.legend.mobile-open{transform:translateX(0)}
+.fab{display:flex;position:absolute;z-index:1150;width:44px;height:44px;border-radius:50%;background:#6b7a1e;border:none;box-shadow:0 3px 10px rgba(0,0,0,0.3);align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s,background 0.2s}
+.fab:active{transform:scale(0.92)}
+.fab.active{background:#4a5a10}
+.fab-filters{top:85px;right:14px}
+.fab-legend{top:85px;left:14px}
+.fab svg{width:22px;height:22px;fill:#fff}
+.info-modal{width:96vw;max-height:92vh;overflow-y:auto}
+.info-header{padding:10px 16px}
+.info-header h4{font-size:13px;padding-right:70px}
+.info-body{padding:12px 16px}
+.info-key{min-width:90px;font-size:11px}
+.info-val{font-size:11px;max-width:170px}
+.download-btn{font-size:10px;padding:3px 8px;right:44px;top:10px}
+.close-btn{top:10px;width:26px;height:26px;font-size:16px}
+.pk-slider-labels{font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
+<h1 style="color:#fff;font-size:18px;font-weight:600;margin:0">Obras Inducidas</h1>
+<div class="project-bubble" onclick="toggleProjectMenu(event)">
+<span>Proyectos</span><span style="font-size:10px;opacity:0.8">▾</span>
+<div class="project-menu" id="project-menu" onclick="event.stopPropagation()"></div>
+</div>
+<div class="project-load-status" id="project-load-status"><span class="spinner"></span><span id="project-load-label">Cargando…</span></div>
+</div>
+</div>
+<div class="stats">
+<button onclick="captureMap()" title="Descargar Fichero" style="text-align:center;padding:4px 10px;background:rgba(255,255,255,0.18);border-radius:8px;border:1px solid rgba(255,255,255,0.12);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zm0-8.4a5.2 5.2 0 1 0 0 10.4 5.2 5.2 0 0 0 0-10.4zM9 3l-1.83 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3H9z"/></svg></button>
+<div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">Obras</div></div>
+<div class="stat"><div class="stat-num" id="critico-count">0</div><div class="stat-label">Críticas</div></div>
+<div class="stat"><div class="stat-num" id="identificada-count">0</div><div class="stat-label">Identificada</div></div>
+<div class="stat"><div class="stat-num" id="gestion-count">0</div><div class="stat-label">Gestionadas/Ejecutadas</div></div>
+<div class="stat"><div class="stat-num" id="concluida-count">0</div><div class="stat-label">Concluida</div></div>
+<div class="stat"><div class="stat-num" id="suspendida-count">0</div><div class="stat-label">Suspendida</div></div>
+</div>
+</div>
+<div id="map"></div>
+<div class="legend">
+<h3>Tipo de obra Inducida</h3>
+<div id="legend-items"></div>
+<div style="margin-top:10px;padding-top:8px;border-top:1px solid #eee">
+<div style="display:flex;align-items:center;gap:6px;margin:4px 0">
+<div style="width:16px;height:14px;background:#fff;border:2px solid #555;border-radius:2px;font-size:7px;text-align:center;line-height:12px;font-weight:700;color:#333">PK</div>
+<span class="legend-text">Cadenamiento c/10 km</span>
+</div>
+<div style="display:flex;align-items:center;gap:6px;margin:4px 0">
+<div style="width:22px;height:3px;background:#e53935;border-radius:1px"></div>
+<span class="legend-text">Trazo KML</span>
+</div>
+</div>
+<div class="toggle-track">
+<div class="switch on" id="kml-toggle" onclick="toggleKML()"><div class="switch-knob"></div></div>
+<span class="toggle-label">Trazo KML</span>
+</div>
+</div>
+<div class="panel">
+<h3>Filtros</h3>
+<div class="filter-group">
+<div class="filter-label">Tipo de obra Inducida</div>
+<select class="filter-select" id="filter-proyecto" onchange="applyFilters()"><option value="TODOS">Todos</option></select>
+</div>
+<div class="filter-group">
+<div class="filter-label">Ente responsable</div>
+<select class="filter-select" id="filter-ente" onchange="applyFilters()"><option value="TODOS">Todos</option></select>
+</div>
+<div class="filter-group">
+<div class="filter-label">Criticidad</div>
+<select class="filter-select" id="filter-criticidad" onchange="applyFilters()">
+<option value="TODOS">Todos</option><option value="SI">SI - Criticas</option><option value="NO">NO</option>
+</select>
+</div>
+<div class="filter-group">
+<div class="filter-label">Riesgo</div>
+<select class="filter-select" id="filter-riesgo" onchange="applyFilters()">
+<option value="TODOS">Todos</option><option value="ALTO">Alto</option><option value="MEDIO">Medio</option><option value="BAJO">Bajo</option>
+</select>
+</div>
+<div class="filter-group">
+<div class="filter-label">Estatus</div>
+<select class="filter-select" id="filter-estatus" onchange="applyFilters()">
+<option value="TODOS">Todos</option><option value="Identificada">Identificada</option><option value="Gestión / Ejecución">Gestión / Ejecución</option><option value="Concluida">Concluida</option><option value="Suspendida">Suspendida</option>
+</select>
+</div>
+<div class="filter-group">
+<div class="filter-label">Rango PK</div>
+<div class="pk-slider-wrap">
+<div class="pk-slider-box">
+<div class="pk-track-bg"></div>
+<div class="pk-track-fill" id="pk-track-fill"></div>
+<input type="range" id="pk-range-min" min="34" max="108" value="36.4" step="0.1" oninput="onPKSlider()" autocomplete="off">
+<input type="range" id="pk-range-max" min="34" max="108" value="108" step="0.1" oninput="onPKSlider()" autocomplete="off">
+</div>
+<div class="pk-slider-labels"><span id="pk-label-min">PK 36+400</span><span id="pk-label-max">PK 108+000</span></div>
+</div>
+</div>
+</div>
+<button class="fab fab-filters" id="fab-filters" onclick="toggleMobilePanel()" aria-label="Filtros" title="Filtros"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm3 5h10v2H7zm3 5h4v2h-4z"/></svg></button>
+<button class="fab fab-legend" id="fab-legend" onclick="toggleMobileLegend()" aria-label="Leyenda" title="Leyenda"><svg viewBox="0 0 24 24"><circle cx="6" cy="7" r="2"/><rect x="10" y="6" width="10" height="2" rx="1"/><circle cx="6" cy="12" r="2"/><rect x="10" y="11" width="10" height="2" rx="1"/><circle cx="6" cy="17" r="2"/><rect x="10" y="16" width="10" height="2" rx="1"/></svg></button>
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeInfo()">
+<div class="info-modal">
+<div class="info-header">
+<button class="download-btn" onclick="printInfo()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>Descargar Fichero</button>
+<button class="close-btn" onclick="closeInfo()">&times;</button>
+<h4 id="info-title"></h4>
+<div class="info-id" id="info-id"></div>
+</div>
+<div class="info-body" id="info-body"></div>
+</div>
+</div>
+<script>
+var obras=[]
+var pkMarkers=[{"pk":36.4,"lat":20.537385,"lon":-100.741711,"label":"PK 36+400"},{"pk":40,"lat":20.535037000000003,"lon":-100.77640991666667,"label":"PK 40+000"},{"pk":50,"lat":20.518564,"lon":-100.866251,"label":"PK 50+000"},{"pk":60,"lat":20.511989,"lon":-100.961263,"label":"PK 60+000"},{"pk":70,"lat":20.582177,"lon":-101.00478871428571,"label":"PK 70+000"},{"pk":80,"lat":20.590063142857144,"lon":-101.0995275,"label":"PK 80+000"},{"pk":90,"lat":20.600770666666666,"lon":-101.19371533333333,"label":"PK 90+000"},{"pk":100,"lat":20.646174666666667,"lon":-101.27546306666667,"label":"PK 100+000"},{"pk":108,"lat":20.66671,"lon":-101.335794,"label":"PK 108+000"}];
+var trackLine=[[20.537385, -100.741711], [20.536321, -100.757121], [20.535246, -100.773409], [20.535005, -100.777211], [20.534444, -100.784778], [20.533978, -100.791863], [20.533554, -100.797607], [20.533139, -100.802087], [20.532401, -100.814314], [20.532178, -100.817403], [20.531966, -100.820482], [20.531711, -100.823944], [20.530167, -100.828564], [20.528345, -100.829963], [20.526258, -100.831094], [20.52272, -100.833162], [20.520552, -100.837149], [20.520116, -100.844201], [20.51999, -100.848423], [20.519482, -100.852828], [20.519376, -100.856043], [20.518762, -100.863365], [20.518564, -100.866251], [20.51776, -100.878352], [20.517157, -100.887204], [20.516945, -100.890102], [20.516495, -100.894773], [20.516198, -100.899562], [20.515925, -100.904461], [20.51563, -100.908946], [20.51621, -100.90017], [20.51563, -100.908946], [20.514804, -100.920703], [20.514517, -100.927225], [20.514092, -100.930945], [20.513502, -100.940037], [20.513355, -100.942208], [20.512806, -100.947411], [20.512337, -100.956111], [20.511989, -100.961263], [20.511555, -100.968156], [20.511506, -100.971143], [20.569832, -100.993111], [20.572642, -100.994631], [20.579045, -101.000227], [20.582571, -101.005349], [20.586174, -101.02905], [20.587404, -101.037832], [20.588201, -101.049065], [20.588414, -101.05645], [20.588762, -101.067765], [20.590418, -101.10819], [20.589844, -101.112003], [20.58994, -101.114023], [20.590177, -101.11734], [20.590233, -101.125267], [20.590326, -101.1279], [20.590556, -101.132744], [20.593121, -101.138779], [20.593353, -101.144339], [20.59327, -101.150079], [20.595378, -101.163726], [20.59725, -101.171414], [20.597272, -101.173901], [20.597777, -101.177187], [20.597755, -101.179318], [20.597967, -101.181502], [20.599141, -101.185384], [20.599911, -101.18822], [20.600326, -101.191274], [20.600993, -101.194936], [20.646484, -101.199234], [20.645228, -101.273734], [20.604892, -101.210395], [20.612235, -101.221752], [20.614432, -101.225216], [20.620959, -101.235414], [20.628412, -101.247002], [20.632017, -101.252599], [20.641404, -101.267602], [20.644627, -101.273136], [20.652328, -101.286702], [20.652754, -101.289235], [20.651098, -101.295463], [20.648098, -101.306445], [20.652816, -101.314005], [20.658135, -101.322839], [20.659666, -101.325219], [20.661937, -101.329625], [20.664816, -101.333879], [20.66671, -101.335794], [20.66671, -101.335794]];
+var kmlRoute=[[20.53749188952, -100.740879382291], [20.537410309358, -100.742026776963], [20.537328721682, -100.743174169804], [20.537247126495, -100.744321560814], [20.537165523795, -100.745468949993], [20.537083913583, -100.746616337339], [20.537002295858, -100.747763722852], [20.536920670622, -100.748911106532], [20.536839037874, -100.750058488378], [20.536756474621, -100.751205792903], [20.536662135499, -100.752352067102], [20.536571601974, -100.753498681107], [20.536490707423, -100.754646116713], [20.536409961821, -100.75579356298], [20.536329308209, -100.75694101528], [20.536260429473, -100.758089306126], [20.536213887391, -100.759238876159], [20.536160735997, -100.760388107818], [20.536084958981, -100.761535920025], [20.536004720922, -100.762683399632], [20.53592447535, -100.76383087742], [20.535844222265, -100.76497835339], [20.535763961665, -100.76612582754], [20.535683693553, -100.767273299871], [20.535603417927, -100.768420770381], [20.535523134787, -100.769568239071], [20.535442844135, -100.770715705939], [20.535362545969, -100.771863170985], [20.53528224029, -100.773010634209], [20.535201927099, -100.77415809561], [20.535121606395, -100.775305555188], [20.535041278178, -100.776453012942], [20.534960942448, -100.777600468871], [20.534880599207, -100.778747922976], [20.534800248453, -100.779895375255], [20.534719890186, -100.781042825709], [20.534639524408, -100.782190274336], [20.534559151117, -100.783337721136], [20.534478770315, -100.784485166108], [20.534398382, -100.785632609253], [20.534317986175, -100.786780050569], [20.534237582837, -100.787927490056], [20.534157171988, -100.789074927714], [20.534076753628, -100.790222363542], [20.533996327756, -100.791369797539], [20.533915894373, -100.792517229706], [20.533835453479, -100.793664660041], [20.533755005074, -100.794812088543], [20.533674549159, -100.795959515214], [20.533594085732, -100.797106940051], [20.533513614795, -100.798254363055], [20.533433136347, -100.799401784225], [20.533352650389, -100.80054920356], [20.533272156921, -100.80169662106], [20.533191655942, -100.802844036725], [20.533111147453, -100.803991450554], [20.533030631455, -100.805138862546], [20.532950107946, -100.806286272701], [20.532869576927, -100.807433681018], [20.532789038399, -100.808581087497], [20.532708492361, -100.809728492138], [20.532627938814, -100.810875894939], [20.532547377757, -100.812023295901], [20.532466809192, -100.813170695023], [20.532386233116, -100.814318092304], [20.532305649532, -100.815465487744], [20.532225058439, -100.816612881342], [20.532144459837, -100.817760273099], [20.532063853726, -100.818907663012], [20.531983240107, -100.820055051082], [20.531902618979, -100.821202437309], [20.531821990343, -100.822349821691], [20.531741354198, -100.823497204229], [20.531660645388, -100.82464457973], [20.53152945772, -100.825785915019], [20.531210875646, -100.826883649902], [20.530693197717, -100.827892308102], [20.529997064163, -100.82877167534], [20.529150229864, -100.829486693579], [20.52820029961, -100.83003946432], [20.527231040417, -100.83055435036], [20.526261779073, -100.831069228159], [20.525292516589, -100.83158409986], [20.524323252969, -100.832098965475], [20.523369125962, -100.832643917229], [20.522500365916, -100.833329404113], [20.521756451264, -100.834164115132], [20.521159823668, -100.835122867294], [20.520728481245, -100.836176736763], [20.520475435796, -100.837293931319], [20.520398397708, -100.838440572221], [20.520383520614, -100.839590909679], [20.520320012315, -100.840739312216], [20.52024110446, -100.841886733905], [20.520162189098, -100.843034153768], [20.52008326623, -100.844181571805], [20.520004335857, -100.845328988016], [20.519925397977, -100.8464764024], [20.519846452591, -100.847623814956], [20.519767499699, -100.848771225684], [20.519688539301, -100.849918634584], [20.519609571398, -100.851066041654], [20.51953059599, -100.852213446895], [20.519451613075, -100.853360850306], [20.519372622656, -100.854508251886], [20.519293624731, -100.855655651635], [20.519214619301, -100.856803049553], [20.519135606366, -100.857950445638], [20.519056585926, -100.85909783989], [20.518977557982, -100.86024523231], [20.518898522532, -100.861392622896], [20.518819479578, -100.862540011647], [20.51874042912, -100.863687398564], [20.518661371157, -100.864834783646], [20.518582343507, -100.865982169822], [20.518511171486, -100.867130120633], [20.518451394351, -100.868278815381], [20.518382497292, -100.869426920143], [20.518303386511, -100.870574295068], [20.518224116787, -100.87172165644], [20.518144839559, -100.87286901597], [20.518065554828, -100.874016373658], [20.517986262594, -100.875163729504], [20.517906962857, -100.876311083508], [20.517827655617, -100.877458435668], [20.517748340874, -100.878605785984], [20.517669018628, -100.879753134457], [20.51758968888, -100.880900481084], [20.517510351629, -100.882047825866], [20.517431006876, -100.883195168803], [20.517351654621, -100.884342509893], [20.517272294863, -100.885489849136], [20.517192927603, -100.886637186532], [20.517113552842, -100.88778452208], [20.517034170578, -100.88893185578], [20.516954780813, -100.890079187631], [20.516875383546, -100.891226517633], [20.516795978777, -100.892373845785], [20.516716370839, -100.893521156714], [20.516625227963, -100.894667482156], [20.516528302332, -100.895813281059], [20.516447007835, -100.896960450974], [20.516367584475, -100.898107771113], [20.516288153614, -100.8992550894], [20.516208715253, -100.900402405833], [20.51612926939, -100.901549720412], [20.516049816027, -100.902697033138], [20.515970355163, -100.903844344009], [20.515890886799, -100.904991653024], [20.515811410934, -100.906138960184], [20.51573192757, -100.907286265488], [20.515652436705, -100.908433568936], [20.51557293834, -100.909580870526], [20.515493432475, -100.910728170258], [20.51541391911, -100.911875468132], [20.515334398246, -100.913022764147], [20.515254869882, -100.914170058303], [20.515175334019, -100.9153173506], [20.515095790656, -100.916464641036], [20.515016239794, -100.917611929612], [20.514936681432, -100.918759216326], [20.514857115572, -100.919906501178], [20.514777542213, -100.921053784169], [20.514697961354, -100.922201065296], [20.514618662335, -100.923348367058], [20.514541151385, -100.924495805233], [20.514463860923, -100.925643258958], [20.514386562957, -100.926790710852], [20.514309257488, -100.927938160914], [20.514234626352, -100.929085804814], [20.514172442906, -100.930234284308], [20.51410238479, -100.931382244556], [20.514024646767, -100.932529656824], [20.513946880303, -100.933677065655], [20.513869106336, -100.934824472646], [20.513791324868, -100.935971877796], [20.513713535899, -100.937119281104], [20.513635739428, -100.938266682569], [20.513557935455, -100.939414082192], [20.513475107345, -100.940561074946], [20.513378497259, -100.941706858573], [20.513280805097, -100.942852539133], [20.513193870169, -100.94399918362], [20.513113070752, -100.945146343218], [20.513032263863, -100.946293500928], [20.512951449479, -100.947440656749], [20.512870627601, -100.94858781068], [20.512789798229, -100.94973496272], [20.512708961364, -100.95088211287], [20.512628117004, -100.952029261127], [20.512547265151, -100.953176407493], [20.512466405804, -100.954323551966], [20.512385571833, -100.955470697151], [20.512305987231, -100.956617939401], [20.512226635855, -100.957765198622], [20.512147276982, -100.958912455971], [20.512067910613, -100.960059711448], [20.511988536748, -100.961206965051], [20.511909155387, -100.96235421678], [20.511829766529, -100.963501466635], [20.511750370176, -100.964648714616], [20.511670966327, -100.965795960721], [20.511591554981, -100.96694320495], [20.511512661771, -100.968090487632], [20.51145965371, -100.969239319052], [20.511487968152, -100.970388855566], [20.511615879787, -100.971530737335], [20.511842403938, -100.972655245472], [20.512165612086, -100.973752807285], [20.51258275266, -100.974814079353], [20.513090274458, -100.97583002701], [20.513683856855, -100.976792001218], [20.514358446572, -100.977691812164], [20.515108300673, -100.978521798951], [20.51592703543, -100.979274894811], [20.516807680641, -100.979944687262], [20.517742738949, -100.980525472715], [20.518724249641, -100.981012305053], [20.519743856394, -100.981401037781], [20.52079167815, -100.981693796061], [20.521851318309, -100.981935098444], [20.522912049564, -100.982171020081], [20.52397278011, -100.982406945618], [20.525033509945, -100.982642875055], [20.526094239071, -100.982878808393], [20.527154967487, -100.983114745632], [20.528215695193, -100.983350686773], [20.529276422189, -100.983586631815], [20.530337148475, -100.98382258076], [20.531397874051, -100.984058533607], [20.532458598917, -100.984294490356], [20.533519323073, -100.984530451009], [20.534580046518, -100.984766415564], [20.535640769253, -100.985002384024], [20.536701491278, -100.985238356387], [20.537762212592, -100.985474332654], [20.538822933196, -100.985710312826], [20.539883653089, -100.985946296903], [20.540944372271, -100.986182284885], [20.542005090743, -100.986418276772], [20.543065808504, -100.986654272566], [20.544126525555, -100.986890272265], [20.545187241894, -100.987126275871], [20.546247957523, -100.987362283383], [20.54730867244, -100.987598294803], [20.548369386647, -100.98783431013], [20.549430100142, -100.988070329364], [20.550490812927, -100.988306352507], [20.551551525, -100.988542379557], [20.552612236361, -100.988778410517], [20.553672947012, -100.989014445385], [20.554733656951, -100.989250484163], [20.555794366178, -100.98948652685], [20.556855074694, -100.989722573446], [20.557915782499, -100.989958623953], [20.558976489592, -100.990194678371], [20.560037195973, -100.990430736699], [20.561097901642, -100.990666798938], [20.5621586066, -100.990902865089], [20.563219310846, -100.991138935152], [20.564280014379, -100.991375009126], [20.565340267981, -100.991613335861], [20.566395520192, -100.991875253354], [20.567439248054, -100.992184724776], [20.56846841611, -100.992545003005], [20.569480832054, -100.992955321567], [20.570474339227, -100.993414807339], [20.571446821214, -100.993922482403], [20.572396206354, -100.994477266123], [20.573320472159, -100.995077977439], [20.57421764962, -100.995723337381], [20.575085827413, -100.99641197179], [20.575923155966, -100.997142414236], [20.576727851408, -100.997913109147], [20.577498199372, -100.998722415115], [20.578232558649, -100.999568608395], [20.578931333912, -101.000448170492], [20.579610052484, -101.001345351465], [20.580286215103, -101.002244716454], [20.580962372339, -101.003144089218], [20.581638524193, -101.004043469756], [20.582304331501, -101.004951421333], [20.582907013365, -101.005907381134], [20.583421460839, -101.006919806321], [20.583842907969, -101.007979599143], [20.58416753436, -101.009077152471], [20.584393724755, -101.010202267921], [20.584559750722, -101.011339515655], [20.58472041773, -101.012477653559], [20.584881077045, -101.013615793164], [20.585041728664, -101.01475393447], [20.58520237259, -101.015892077477], [20.585363008821, -101.017030222183], [20.585523637357, -101.018168368588], [20.585684258198, -101.019306516693], [20.585844871344, -101.020444666496], [20.586005476794, -101.021582817997], [20.586157121846, -101.022722314972], [20.586247406911, -101.023868878565], [20.586252298055, -101.025019436953], [20.586198285616, -101.026168834109], [20.586151391301, -101.027318552408], [20.586164696958, -101.028469103591], [20.586251120881, -101.029616075672], [20.586396189894, -101.030756518989], [20.586554595604, -101.031895015644], [20.586713007872, -101.033033511725], [20.586871412441, -101.034172009467], [20.587029809311, -101.03531050887], [20.587188198482, -101.036449009933], [20.587346579954, -101.037587512655], [20.587504953726, -101.038726017036], [20.587663319798, -101.039864523076], [20.58782135911, -101.041003080538], [20.587959027792, -101.042144534768], [20.588041817324, -101.043291890833], [20.588079732767, -101.044442023531], [20.588110517101, -101.045592419633], [20.588141293738, -101.04674281547], [20.58817206268, -101.047893211042], [20.588202823925, -101.049043606349], [20.588233577474, -101.05019400139], [20.588264323327, -101.051344396164], [20.588295061484, -101.052494790672], [20.588325791944, -101.053645184911], [20.588356514708, -101.054795578883], [20.588387229775, -101.055945972586], [20.588417937146, -101.05709636602], [20.58844863682, -101.058246759184], [20.588479328798, -101.059397152078], [20.58851001308, -101.060547544701], [20.588540689665, -101.061697937053], [20.588571358553, -101.062848329133], [20.588602019745, -101.063998720941], [20.58863267324, -101.065149112476], [20.588663319039, -101.066299503738], [20.58869395714, -101.067449894726], [20.588724587546, -101.068600285439], [20.588755210254, -101.069750675878], [20.588785825266, -101.070901066041], [20.58881643258, -101.072051455928], [20.588847032199, -101.073201845539], [20.58887762412, -101.074352234873], [20.588908208344, -101.075502623929], [20.588938784871, -101.076653012707], [20.588969353702, -101.077803401207], [20.588999914836, -101.078953789427], [20.589030468272, -101.080104177368], [20.589061014012, -101.081254565029], [20.589091552054, -101.082404952409], [20.5891220824, -101.083555339508], [20.589152605048, -101.084705726325], [20.589183119999, -101.08585611286], [20.589213627253, -101.087006499112], [20.58924412681, -101.088156885081], [20.58927461867, -101.089307270767], [20.589305102833, -101.090457656168], [20.589335579298, -101.091608041284], [20.589366048066, -101.092758426114], [20.589396509137, -101.093908810659], [20.58942696251, -101.095059194918], [20.589457408186, -101.096209578889], [20.589487846165, -101.097359962573], [20.589518276446, -101.098510345969], [20.58954869903, -101.099660729077], [20.589579113916, -101.100811111895], [20.589616862121, -101.101961226383], [20.589699601018, -101.103108539623], [20.589846430669, -101.104248592422], [20.590041754534, -101.105380546457], [20.590237953902, -101.106512324932], [20.590375456779, -101.107653594336], [20.590432203634, -101.108802582611], [20.590407713757, -101.109952855577], [20.590302711929, -101.111098023647], [20.590145545005, -101.112236669003], [20.590007836241, -101.11337800612], [20.58995934131, -101.114527268062], [20.589981211488, -101.115677818728], [20.590012064436, -101.116828181197], [20.590042909685, -101.117978543377], [20.590073747235, -101.119128905269], [20.590104577087, -101.120279266871], [20.590135399241, -101.121429628182], [20.590166213696, -101.122579989203], [20.590197020453, -101.123730349933], [20.590227819511, -101.124880710371], [20.59025861087, -101.126031070517], [20.590289394531, -101.12718143037], [20.590320170493, -101.128331789929], [20.590350938757, -101.129482149195], [20.590381733949, -101.130632507114], [20.590438735003, -101.131781530572], [20.590603948122, -101.132918201423], [20.590896097102, -101.134025697864], [20.591310982053, -101.135088093543], [20.59183315195, -101.136096107215], [20.592386928842, -101.137085296804], [20.592876764922, -101.138111189665], [20.593249478839, -101.139191081483], [20.5934977745, -101.140310594998], [20.593618080365, -101.141453625828], [20.593608666059, -101.142603731177], [20.59346968404, -101.143744369836], [20.593226809853, -101.144865751525], [20.592971353555, -101.145984105799], [20.592777139497, -101.147116007358], [20.592667142562, -101.148260593644], [20.592642199826, -101.149410819259], [20.592702465441, -101.150559567717], [20.592847527562, -101.151699738791], [20.593058612754, -101.152828458515], [20.593282321146, -101.153954497404], [20.593506021981, -101.155080538863], [20.59372971518, -101.156206582909], [20.593953400743, -101.157332629542], [20.594177078669, -101.158458678762], [20.594400748959, -101.159584730568], [20.594624411612, -101.160710784959], [20.594848066628, -101.161836841935], [20.595071714007, -101.162962901496], [20.595295353748, -101.164088963641], [20.595518985851, -101.16521502837], [20.595742610316, -101.166341095683], [20.595966227143, -101.167467165579], [20.596189836331, -101.168593238057], [20.59641343788, -101.169719313117], [20.59663703179, -101.170845390759], [20.596860618061, -101.171971470982], [20.597094900197, -101.17309502912], [20.597374397043, -101.174206901336], [20.597620819307, -101.175327246222], [20.597750591942, -101.176469115732], [20.597755660627, -101.177619452057], [20.597703289373, -101.178768944483], [20.597703496098, -101.179919324134], [20.597827292518, -101.181061939295], [20.598078967466, -101.182180607448], [20.5984315458, -101.1832686562], [20.598796354142, -101.18435228738], [20.599107531141, -101.185454439367], [20.599353696688, -101.18657508659], [20.599577516774, -101.187701123397], [20.599801094947, -101.188827215432], [20.600024665477, -101.189953310043], [20.600248228364, -101.19107940723], [20.600471783607, -101.192205506992], [20.600695331206, -101.193331609328], [20.600918871161, -101.194457714238], [20.601142403472, -101.195583821722], [20.601365928139, -101.196709931779], [20.601589445161, -101.197836044409], [20.601812954537, -101.198962159612], [20.602036456269, -101.200088277386], [20.602259950354, -101.201214397732], [20.602483436794, -101.202340520649], [20.602706915588, -101.203466646137], [20.602930386736, -101.204592774195], [20.603153850237, -101.205718904823], [20.603377306092, -101.20684503802], [20.603633289559, -101.207962825777], [20.604059993052, -101.209018627855], [20.604647042239, -101.209985384005], [20.605262608898, -101.210932536708], [20.605878169628, -101.21187969675], [20.60649372443, -101.21282686413], [20.607109273303, -101.213774038848], [20.607724800663, -101.214721232327], [20.608335923256, -101.21567163287], [20.608936705631, -101.216629448098], [20.609535243602, -101.217588854039], [20.610135010246, -101.218547395119], [20.610743257405, -101.219499889408], [20.611353846736, -101.220450698967], [20.611964430098, -101.221401515824], [20.612575007491, -101.22235233998], [20.613185578913, -101.223303171435], [20.613796144366, -101.22425401019], [20.614406703848, -101.225204856244], [20.615017257358, -101.226155709597], [20.615627804897, -101.22710657025], [20.616238346463, -101.228057438203], [20.616848882057, -101.229008313455], [20.617459411677, -101.229959196007], [20.618069935323, -101.230910085859], [20.618680452996, -101.231860983011], [20.619290964693, -101.232811887463], [20.619901470415, -101.233762799216], [20.620511970161, -101.234713718269], [20.621122463931, -101.235664644622], [20.621732951724, -101.236615578276], [20.62234343354, -101.237566519231], [20.622953909378, -101.238517467486], [20.623564379238, -101.239468423043], [20.624174843119, -101.2404193859], [20.62478530102, -101.241370356059], [20.625395752942, -101.242321333519], [20.626006198884, -101.24327231828], [20.626616638844, -101.244223310342], [20.627227072824, -101.245174309706], [20.627837500821, -101.246125316372], [20.628447922836, -101.24707633034], [20.629058338869, -101.248027351609], [20.629668748918, -101.24897838018], [20.630279152983, -101.249929416054], [20.630889551064, -101.250880459229], [20.63149994316, -101.251831509707], [20.632110329271, -101.252782567487], [20.632720709396, -101.25373363257], [20.633331083535, -101.254684704955], [20.633941451687, -101.255635784643], [20.634551813851, -101.256586871634], [20.635162170028, -101.257537965928], [20.635772520217, -101.258489067525], [20.636382864416, -101.259440176425], [20.636993202627, -101.260391292628], [20.637603534847, -101.261342416134], [20.638213783244, -101.262293603274], [20.638818083339, -101.263249058537], [20.639409079716, -101.264213859852], [20.639986842618, -101.26518767098], [20.640559505983, -101.266164887734], [20.641132135996, -101.267142129381], [20.641704759754, -101.268119377999], [20.642277377257, -101.269096633585], [20.642849988504, -101.270073896141], [20.643422593495, -101.271051165666], [20.643995192229, -101.272028442161], [20.644567784706, -101.273005725625], [20.645140370925, -101.273983016058], [20.645712950886, -101.274960313462], [20.646285524588, -101.275937617834], [20.646858092031, -101.276914929177], [20.647430653214, -101.277892247489], [20.648003208138, -101.278869572771], [20.6485757568, -101.279846905022], [20.649148299201, -101.280824244244], [20.649720835341, -101.281801590435], [20.650293365218, -101.282778943596], [20.650865888833, -101.283756303727], [20.651434626721, -101.284736137774], [20.651947123055, -101.285749834154], [20.652345921815, -101.286819468948], [20.652621318305, -101.287932135701], [20.652769351147, -101.289071828548], [20.652787891121, -101.290222152709], [20.652676671799, -101.29136656046], [20.652437293363, -101.292488589299], [20.652073199558, -101.293572098884], [20.651589679618, -101.294601534504], [20.65101486336, -101.295577161559], [20.650419149406, -101.296538741304], [20.649823392823, -101.297500286714], [20.649241503853, -101.298471237347], [20.648741425933, -101.299491705372], [20.648359520299, -101.300568240411], [20.648101661682, -101.301685599475], [20.647971557925, -101.302827714341], [20.647971079685, -101.303978161042], [20.648100233564, -101.305120395931], [20.648357162029, -101.306237993454], [20.648738170126, -101.307314882234], [20.649237689559, -101.308335631935], [20.649825933944, -101.309302179127], [20.650433267189, -101.310255504287], [20.651040612061, -101.311208824034], [20.651647950903, -101.312162151058], [20.652255283714, -101.31311548536], [20.652862610492, -101.314068826941], [20.653463741765, -101.315026570375], [20.654049047079, -101.315995337089], [20.654633015425, -101.316965020332], [20.655216977573, -101.317934710648], [20.655800933524, -101.318904408037], [20.656384883277, -101.319874112499], [20.656968908872, -101.320843768218], [20.657566218449, -101.321804200103], [20.658177077239, -101.322755005803], [20.658767281625, -101.323720409716], [20.659351302421, -101.324690080502], [20.659935317015, -101.325659758362], [20.660519322863, -101.326629445027], [20.661099784964, -101.327601527794], [20.66167226121, -101.32857894946], [20.662243921276, -101.329556913965], [20.662815592167, -101.330534874137], [20.663391451474, -101.331510053315], [20.663972477962, -101.332481775066], [20.664553979404, -101.33345317813], [20.665181021474, -101.334391208766], [20.665937469681, -101.335213493897], [20.66681484857, -101.335886626398], [20.667787291993, -101.336391262986], [20.668811367321, -101.336766868193], [20.669841045643, -101.337125288123], [20.670870722645, -101.337483713562], [20.671900290527, -101.337842492853], [20.672919631262, -101.338232389675], [20.673916534228, -101.338683161088], [20.674905763867, -101.339152914831], [20.675894990777, -101.339622677032], [20.676884215718, -101.340092445884], [20.67787343869, -101.340562221385], [20.678368049437, -101.34079711163]];
+var lineTypes=[];
+var colorMap={'Media Tension':'#f4511e','Telecomunicaciones':'#00838f','Gasoducto':'#f9a825','Alta Tension':'#c62828','Servicios municipales':'#2e7d32','Drenaje':'#4e342e','Servicios privados':'#ad1457','Hidrocarburo':'#37474f','Agua Potable':'#1565c0','Baja Tension':'#6a1b9a','Inah':'#795548'};
+var symbolMap={
+'Media Tension':    ['#f4511e','<path d="M10,1 L6,8 L9,8 L6,15 L13,7 L9,7 Z" fill="__C__" stroke="#fff" stroke-width="0.8"/>'],
+'Alta Tension':     ['#c62828','<path d="M8,1 L5,8 L3,8 L5.5,15 M8,1 L11,8 L13,8 L10.5,15 M4.5,10 L11.5,10 M5.5,8 L10.5,8" fill="none" stroke="__C__" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'],
+'Baja Tension':     ['#6a1b9a','<circle cx="8" cy="7" r="4.5" fill="__C__" stroke="#fff" stroke-width="0.5"/><rect x="5.5" y="11.5" width="5" height="1.5" rx="0.5" fill="__C__" stroke="#fff" stroke-width="0.5"/><rect x="6.5" y="13" width="3" height="1.5" rx="0.5" fill="__C__" stroke="#fff" stroke-width="0.5"/>'],
+'Telecomunicaciones':['#00838f','<line x1="8" y1="5" x2="8" y2="15" stroke="__C__" stroke-width="2.5"/><path d="M5,9.5 A4,3 0 0,1 11,9.5" fill="none" stroke="__C__" stroke-width="1.8"/><path d="M2.5,6 A7,6 0 0,1 13.5,6" fill="none" stroke="__C__" stroke-width="1.8"/><circle cx="8" cy="5" r="2" fill="__C__"/>'],
+'Gasoducto':        ['#f9a825','<path d="M8,14 C4,14 3,10 5,8 C5,11 7,10 6,7 C7,5 8,2 8,1 C10,4 10,6 10,8 C10,6 11,7 11,9.5 C13,12 12,14 8,14 Z" fill="__C__" stroke="#fff" stroke-width="0.5"/>'],
+'Agua Potable':     ['#1565c0','<path d="M8,2 C7,4 3,8.5 3,11 A5,5 0 0,0 13,11 C13,8.5 9,4 8,2 Z" fill="__C__" stroke="#fff" stroke-width="0.5"/>'],
+'Hidrocarburo':     ['#37474f','<ellipse cx="8" cy="5" rx="5" ry="2" fill="__C__" stroke="#fff" stroke-width="0.6"/><rect x="3" y="5" width="10" height="7" fill="__C__" stroke="#fff" stroke-width="0.6"/><ellipse cx="8" cy="12" rx="5" ry="2" fill="__C__" stroke="#fff" stroke-width="0.6"/><line x1="3" y1="8.5" x2="13" y2="8.5" stroke="#fff" stroke-width="1" opacity="0.5"/>'],
+'Drenaje':          ['#4e342e','<path d="M5,1 L8,5 L11,1 M5,5.5 L8,9.5 L11,5.5 M5,10 L8,14 L11,10" fill="none" stroke="__C__" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'],
+'Servicios municipales':['#2e7d32','<polygon points="8,2 14,7 2,7" fill="__C__" stroke="#fff" stroke-width="0.5"/><rect x="2" y="7" width="12" height="8" fill="__C__" stroke="#fff" stroke-width="0.5"/><rect x="5.5" y="10" width="5" height="5" fill="#fff" opacity="0.3"/>'],
+'Servicios privados':['#ad1457','<rect x="3" y="1" width="10" height="14" fill="__C__" stroke="#fff" stroke-width="0.5"/><rect x="4.5" y="3" width="3" height="3" fill="#fff" opacity="0.45"/><rect x="8.5" y="3" width="3" height="3" fill="#fff" opacity="0.45"/><rect x="4.5" y="8" width="3" height="3" fill="#fff" opacity="0.45"/><rect x="8.5" y="8" width="3" height="3" fill="#fff" opacity="0.45"/>'],
+'Inah':['#795548','<polygon points="8,2 14,14 2,14" fill="__C__" stroke="#fff" stroke-width="0.5"/><line x1="8" y1="2" x2="8" y2="14" stroke="#fff" stroke-width="0.8" opacity="0.5"/><line x1="2" y1="10" x2="14" y2="10" stroke="#fff" stroke-width="0.8" opacity="0.5"/>']
+};
+function mkSVG(tipo,sz){
+var e=symbolMap[tipo]||['#888','<circle cx="8" cy="8" r="6" fill="__C__" stroke="#fff" stroke-width="1"/>'];
+var body=e[1].split('__C__').join(e[0]);
+return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="'+sz+'" height="'+sz+'">'+body+'</svg>';
+}
+function getIcon(proyecto,critical){
+var sz=critical?18:14;
+return L.divIcon({className:'',html:mkSVG(proyecto,sz),iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+var estatusClass={'Identificada':'estatus-identificada','Gestión / Ejecución':'estatus-gestion','Concluida':'estatus-concluida','Suspendida':'estatus-suspendida'};
+var estatusColorMap={'Identificada':'#e53935','Gestión / Ejecución':'#f9a825','Concluida':'#43a047','Suspendida':'#7b1fa2'};
+function getEstIcon(proyecto,estatus,critical){
+var ec=estatusColorMap[estatus]||'#888';
+var sz=critical?18:14;
+var csz=sz+16;
+var svg=mkSVG(proyecto,sz);
+var h='<div style="position:relative;width:'+csz+'px;height:'+csz+'px"><div class="est-ring" style="width:'+csz+'px;height:'+csz+'px;border:2.5px solid '+ec+';"></div><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">'+svg+'</div></div>';
+return L.divIcon({className:'',html:h,iconSize:[csz,csz],iconAnchor:[csz/2,csz/2]});
+}
+
+var map=L.map('map',{zoomControl:false}).setView([20.55,-101.0],11);
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri',maxZoom:19}).addTo(map);
+
+var kmlLayer=L.polyline(kmlRoute,{color:'#e53935',weight:3,opacity:0.7,lineCap:'round',lineJoin:'round'}).addTo(map);
+var kmlVisible=true;
+
+function toggleKML(){
+kmlVisible=!kmlVisible;
+var tog=document.getElementById('kml-toggle');
+if(kmlVisible){map.addLayer(kmlLayer);tog.classList.add('on')}
+else{map.removeLayer(kmlLayer);tog.classList.remove('on')}
+}
+
+pkMarkers.forEach(function(pk){
+var icon=L.divIcon({className:'',html:'<div class="pk-label">'+pk.label+'</div>',iconSize:[80,22],iconAnchor:[40,28]});
+L.marker([pk.lat,pk.lon],{icon:icon,interactive:false}).addTo(map);
+L.circleMarker([pk.lat,pk.lon],{radius:4,fillColor:'#555',color:'#fff',weight:2,fillOpacity:1}).addTo(map);
+});
+
+var layers=[],markers=[];
+function getColor(p){return colorMap[p]||'#888'}
+function fmtNum(n){return n?Number(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}):'--'}
+
+function buildLegend(){
+var c=document.getElementById('legend-items');
+var counts={};obras.forEach(function(o){counts[o.proyecto]=(counts[o.proyecto]||0)+1});
+Object.entries(counts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+var d=document.createElement('div');d.className='legend-item';
+var s=mkSVG(e[0],16);
+d.innerHTML=s+'<span class="legend-text">'+e[0]+'</span><span class="legend-count">'+e[1]+'</span>';
+d.onclick=function(){document.getElementById('filter-proyecto').value=e[0];applyFilters()};
+c.appendChild(d);
+});
+}
+
+function buildFilters(){
+[...new Set(obras.map(function(o){return o.proyecto}))].sort().forEach(function(p){
+var o=document.createElement('option');o.value=p;o.textContent=p;document.getElementById('filter-proyecto').appendChild(o)});
+[...new Set(obras.map(function(o){return o.ente}))].sort().forEach(function(e){
+var o=document.createElement('option');o.value=e;o.textContent=e;document.getElementById('filter-ente').appendChild(o)});
+}
+
+function showInfo(o){
+document.getElementById('info-title').textContent=o.proyecto+' - '+o.ente;
+document.getElementById('info-id').textContent=o.id;
+var b=document.getElementById('info-body');
+var rc=o.riesgo==='ALTO'?'alto':o.riesgo==='MEDIO'?'medio':'bajo';
+var cc=o.criticidad==='SI'?'critico':'bajo';
+var ec=estatusClass[o.estatus]||'estatus-identificada';
+function rowIf(k,v,cls){var t=(v||'').toString().trim();if(!t||t==='_'||t==='-'||t.toLowerCase()==='n/a')return '';return '<div class="info-row"><span class="info-key">'+k+'</span><span class="info-val'+(cls?' '+cls:'')+'">'+t+'</span></div>';}
+b.innerHTML='<div class="info-row"><span class="info-key">Estatus</span><span class="info-val"><span class="estatus-badge '+ec+'">'+o.estatus+'</span></span></div>'
++rowIf('Estado',o.estado)
++rowIf('Municipio',o.municipio)
++rowIf('Localidad',o.localidad)
++'<div class="info-row"><span class="info-key">PK</span><span class="info-val">'+o.pk_ini+' a '+o.pk_fin+'</span></div>'
++rowIf('Tipo activo',o.tipo_activo)
++rowIf('Tipo de intervención',o.tipo_obra)
++'<div class="info-row"><span class="info-key">Criticidad</span><span class="info-val '+cc+'">'+o.criticidad+'</span></div>'
++'<div class="info-row"><span class="info-key">Riesgo</span><span class="info-val '+rc+'">'+o.riesgo+'</span></div>'
++rowIf('Entidad / Empresa',o.ente)
++rowIf('Responsable',o.responsable)
++rowIf('Fecha',o.fecha)
++rowIf('Monto estimado ($MDP)',o.monto)
++rowIf('Descripción',o.descripcion)
++rowIf('Observaciones',o.observaciones)
++'<div style="display:flex;gap:8px;margin-top:8px">'
++'<div class="utm-row" style="flex:1"><div class="utm-label">Geograficas (WGS84)</div>'
++'<div style="display:flex;gap:12px;margin-top:3px">'
++'<div><span class="utm-label">Lat</span><div class="utm-val" style="font-size:12px">'+o.lat_ini.toFixed(6)+'</div></div>'
++'<div><span class="utm-label">Lon</span><div class="utm-val" style="font-size:12px">'+o.lon_ini.toFixed(6)+'</div></div>'
++'</div></div>'
++'<div class="utm-row" style="flex:1"><div class="utm-label">UTM Zona 14N</div>'
++'<div style="display:flex;gap:12px;margin-top:3px">'
++'<div><span class="utm-label">Este</span><div class="utm-val" style="font-size:12px">'+fmtNum(o.utm_ie)+'</div></div>'
++'<div><span class="utm-label">Norte</span><div class="utm-val" style="font-size:12px">'+fmtNum(o.utm_in)+'</div></div>'
++'</div></div></div>';
+document.getElementById('overlay').classList.add('active');
+}
+
+function closeInfo(){document.getElementById('overlay').classList.remove('active')}
+function captureMap(){
+  html2canvas(document.body,{useCORS:true,allowTaint:true,scale:2,logging:false}).then(function(canvas){
+    var img=canvas.toDataURL('image/jpeg',0.95);
+    var w=canvas.width, h=canvas.height;
+    var pdf=new window.jspdf.jsPDF({orientation:w>h?'landscape':'portrait',unit:'px',format:[w,h]});
+    pdf.addImage(img,'JPEG',0,0,w,h);
+    pdf.save('obras-inducidas-tramo2.pdf');
+  });
+}
+function printInfo(){
+  var modal=document.querySelector('.info-modal');
+  var w=window.open('','_blank','width=600,height=800');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ficha técnica</title><style>body{font-family:Segoe UI,system-ui,sans-serif;margin:0;padding:0}'+
+    '.info-header{padding:12px 20px;background:#1a73e8;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.info-header h4{font-size:15px;font-weight:700;color:#fff;margin:0}.info-id{font-size:11px;margin-top:3px;color:#cfe2ff}'+
+    '.info-body{padding:16px 20px}.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #e0e0e0}.info-row:last-child{border:none}'+
+    '.info-key{color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0;width:130px;font-weight:600}.info-val{color:#111;font-size:13px;text-align:right;font-weight:700}'+
+    '.estatus-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    '.estatus-identificada{background:#ffebee;color:#b71c1c}.estatus-gestion{background:#fff3e0;color:#bf360c}.estatus-concluida{background:#e8f5e9;color:#1b5e20}.estatus-suspendida{background:#f3e5f5;color:#4a148c}'+
+    '.utm-row{background:#f0f0f0;border-radius:8px;padding:8px 12px;margin-top:8px;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.utm-label{color:#555;font-size:10px;text-transform:uppercase;margin-bottom:4px;font-weight:600}.utm-val{color:#111;font-weight:700}'+
+    '.download-btn,.close-btn{display:none}'+
+    '@media print{@page{margin:10mm}}</style></head><body>');
+  w.document.write(modal.innerHTML);
+  w.document.write('</body></html>');
+  w.document.close();
+  w.onload=function(){w.focus();w.print();};
+}
+function clearMap(){layers.forEach(function(l){map.removeLayer(l)});markers.forEach(function(m){map.removeLayer(m)});layers=[];markers=[]}
+
+// Convierte "13+990" → 13990 (metros). Tolera espacios y formatos sueltos.
+// Scope global porque tanto applyFilters como refreshPKRange la usan.
+function parsePK(pk){var p=(pk||'').toString().replace(/\s/g,'').split('+');return p.length===2?parseFloat(p[0])*1000+parseFloat(p[1]):parseFloat(pk)*1000;}
+
+function applyFilters(){
+clearMap();
+var fp=document.getElementById('filter-proyecto').value;
+var useEst=fp!=='TODOS';
+var fe=document.getElementById('filter-ente').value;
+var fc=document.getElementById('filter-criticidad').value;
+var fr=document.getElementById('filter-riesgo').value;
+var fst=document.getElementById('filter-estatus').value;
+var pkMin=Math.round(parseFloat(document.getElementById('pk-range-min').value)*1000);
+var pkMax=Math.round(parseFloat(document.getElementById('pk-range-max').value)*1000);
+var f=obras.filter(function(o){
+if(fp!=='TODOS'&&o.proyecto!==fp)return false;
+if(fe!=='TODOS'&&o.ente!==fe)return false;
+if(fc!=='TODOS'&&o.criticidad!==fc)return false;
+if(fr!=='TODOS'&&o.riesgo!==fr)return false;
+if(fst!=='TODOS'&&o.estatus!==fst)return false;
+var ini=parsePK(o.pk_ini),fin=parsePK(o.pk_fin||o.pk_ini);if(fin<pkMin||ini>pkMax)return false;
+return true;
+});
+document.getElementById('total-count').textContent=f.length;
+document.getElementById('critico-count').textContent=f.filter(function(o){return o.criticidad==='SI'}).length;
+document.getElementById('identificada-count').textContent=f.filter(function(o){return o.estatus==='Identificada'}).length;
+document.getElementById('gestion-count').textContent=f.filter(function(o){return o.estatus==='Gestión / Ejecución'}).length;
+document.getElementById('concluida-count').textContent=f.filter(function(o){return o.estatus==='Concluida'}).length;
+document.getElementById('suspendida-count').textContent=f.filter(function(o){return o.estatus==='Suspendida'}).length;
+f.forEach(function(o){
+var c=useEst?estatusColorMap[o.estatus]||'#888':getColor(o.proyecto),cr=o.criticidad==='SI';
+var icon=useEst?getEstIcon(o.proyecto,o.estatus,cr):getIcon(o.proyecto,cr);
+// Polígono (típicamente obras INAH con V1/V2/V3 vértices)
+if(o.polygon&&o.polygon.length>=3){
+var pg=L.polygon(o.polygon,{color:c,weight:cr?3:2,opacity:0.9,fillOpacity:0.22}).addTo(map);
+pg.on('click',function(){showInfo(o)});layers.push(pg);
+// Marcador en el centroide para que sea clickeable también desde lejos
+var cx=0,cy=0;o.polygon.forEach(function(v){cx+=v[0];cy+=v[1];});cx/=o.polygon.length;cy/=o.polygon.length;
+var m=L.marker([cx,cy],{icon:icon}).addTo(map);
+m.on('click',function(){showInfo(o)});markers.push(m);
+return;
+}
+var il=(o.lat_ini!==o.lat_fin||o.lon_ini!==o.lon_fin);
+if(o.proyecto==='Servicios municipales')il=false;
+if(il){
+var ln=L.polyline([[o.lat_ini,o.lon_ini],[o.lat_fin,o.lon_fin]],{color:c,weight:cr?4:2.5,opacity:0.85}).addTo(map);
+ln.on('click',function(){showInfo(o)});layers.push(ln);
+var a=L.marker([o.lat_ini,o.lon_ini],{icon:icon}).addTo(map);
+var b2=L.marker([o.lat_fin,o.lon_fin],{icon:icon}).addTo(map);
+a.on('click',function(){showInfo(o)});b2.on('click',function(){showInfo(o)});
+markers.push(a);markers.push(b2);
+}else{
+var m2=L.marker([o.lat_ini,o.lon_ini],{icon:icon}).addTo(map);
+m2.on('click',function(){showInfo(o)});markers.push(m2);
+}
+});
+if(f.length>0){
+function inMX(la,lo){return la>14&&la<33&&lo>-118&&lo<-85;}
+var bn=[];f.forEach(function(o){
+if(o.polygon)o.polygon.forEach(function(v){if(inMX(v[0],v[1]))bn.push(v);});
+if(inMX(o.lat_ini,o.lon_ini))bn.push([o.lat_ini,o.lon_ini]);
+if(!isNaN(o.lat_fin)&&!isNaN(o.lon_fin)&&inMX(o.lat_fin,o.lon_fin)&&(o.lat_ini!==o.lat_fin||o.lon_ini!==o.lon_fin))bn.push([o.lat_fin,o.lon_fin]);
+});
+if(bn.length<2){bn=pkMarkers.map(function(p){return[p.lat,p.lon];});}
+var isMobile=window.innerWidth<=768;
+map.fitBounds(bn,{paddingTopLeft:isMobile?[20,150]:[250,90],paddingBottomRight:isMobile?[20,60]:[310,30]});
+}
+}
+function fmtPK(v){var k=Math.floor(v);var m=Math.round((v-k)*1000);return 'PK '+k+'+'+(m<100?(m<10?'00'+m:'0'+m):m);}
+function onPKSlider(){
+var smin=document.getElementById('pk-range-min'),smax=document.getElementById('pk-range-max');
+var mn=parseFloat(smin.value),mx=parseFloat(smax.value);
+if(mn>mx){var t=mn;mn=mx;mx=t;smin.value=mn;smax.value=mx;}
+document.getElementById('pk-label-min').textContent=fmtPK(mn);
+document.getElementById('pk-label-max').textContent=fmtPK(mx);
+var rmin=parseFloat(smin.min),rmax=parseFloat(smin.max),span=rmax-rmin||1;
+var pctL=(mn-rmin)/span*100,pctR=(mx-rmin)/span*100;
+var fill=document.getElementById('pk-track-fill');
+fill.style.left=pctL+'%';fill.style.width=(pctR-pctL)+'%';
+applyFilters();
+}
+// Recalcula el rango del slider PK según las obras cargadas. Se llama
+// desde loadFromUrls cada vez que entra un dataset nuevo.
+function refreshPKRange(){
+var pks=[];
+obras.forEach(function(o){var a=parsePK(o.pk_ini)/1000,b=parsePK(o.pk_fin)/1000;if(!isNaN(a))pks.push(a);if(!isNaN(b))pks.push(b);});
+if(pks.length===0)return;
+var mn=Math.floor(Math.min.apply(null,pks)),mx=Math.ceil(Math.max.apply(null,pks));
+if(mn===mx)mx=mn+1;
+var smin=document.getElementById('pk-range-min'),smax=document.getElementById('pk-range-max');
+smin.min=mn;smin.max=mx;smin.value=mn;
+smax.min=mn;smax.max=mx;smax.value=mx;
+}
+function parseCSV(text){
+var nl=String.fromCharCode(10),cr=String.fromCharCode(13);
+var lines=text.replace(new RegExp(cr+nl,'g'),nl).split(nl).filter(Boolean);
+function parseLine(line){var cols=[];var cur='';var inQ=false;for(var i=0;i<line.length;i++){var c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}else if(c===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=c;}cols.push(cur.trim());return cols;}
+var headers=parseLine(lines[0]);
+return lines.slice(1).map(function(l){var cols=parseLine(l);var o={};headers.forEach(function(h,i){o[h]=cols[i]||'';});return o;});
+}
+function normEstatus(s){
+var m={'GESTIÓN / EJECUCIÓN':'Gestión / Ejecución','GESTION / EJECUCION':'Gestión / Ejecución','CONCLUIDA':'Concluida','IDENTIFICADA':'Identificada','SUSPENDIDA':'Suspendida'};
+return m[s.trim()]||s;
+}
+// Conversión UTM Zona 14N → WGS84 (proj4js cargado por CDN).
+if(typeof proj4!=='undefined'){proj4.defs('EPSG:32614','+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs');}
+
+// Normaliza un valor de coordenada que puede venir como:
+//   "20.537385"   (decimal con punto)
+//   " 20.537385°" (con sufijo grados)
+//   "20,537307"   (decimal con coma estilo es-MX)
+//   "2,276,359"   (UTM con separadores de miles)
+//   "339,780"     (UTM corto con coma de miles)
+// Devuelve un Number sin distinguir todavía grados vs UTM (esa decisión
+// se toma con la magnitud, en rowToLatLon).
+function parseCoord(raw){
+  if(raw===null||raw===undefined)return NaN;
+  var s=String(raw).trim().replace(/°/g,'').replace(/\s/g,'');
+  if(!s||s==='_'||s==='-')return NaN;
+  var commas=(s.match(/,/g)||[]).length;
+  var dots=(s.match(/\./g)||[]).length;
+  if(commas>=2)return parseFloat(s.replace(/,/g,''));         // miles UTM
+  if(commas===1&&dots===0){
+    // ambigüedad: ¿decimal con coma o miles UTM? Decidir por magnitud
+    var asDecimal=parseFloat(s.replace(',','.'));
+    var asThousands=parseFloat(s.replace(',',''));
+    if(!isNaN(asDecimal)&&Math.abs(asDecimal)<=180&&!isNaN(asThousands)&&Math.abs(asThousands)>180){
+      // si la versión decimal cabe en grados y la versión miles cae en rango UTM,
+      // preferimos la lectura que arroje un par válido más adelante; aquí elegimos
+      // la versión decimal por defecto porque es lo más común en estos sheets.
+      return asDecimal;
+    }
+    if(!isNaN(asDecimal)&&Math.abs(asDecimal)<=180)return asDecimal;
+    return asThousands;
+  }
+  return parseFloat(s.replace(/,/g,''));
+}
+
+// Toma el par (latRaw, lonRaw) tal como aparece en el CSV y devuelve
+// {lat,lon} en WGS84. Si las magnitudes indican UTM (>180), convierte
+// asumiendo Zona 14N (encabezados del sheet vienen invertidos: "LAT"=Northing,
+// "LONG"=Easting cuando son UTM).
+function rowToLatLon(latRaw,lonRaw){
+  var a=parseCoord(latRaw),b=parseCoord(lonRaw);
+  if(isNaN(a)||isNaN(b))return null;
+  if(Math.abs(a)<=90&&Math.abs(b)<=180)return{lat:a,lon:b};
+  if(typeof proj4==='undefined')return null;
+  var ll=proj4('EPSG:32614','EPSG:4326',[b,a]); // [easting,northing] → [lon,lat]
+  return{lat:ll[1],lon:ll[0]};
+}
+
+// Alias para tolerar variaciones de mayúsculas/acentos en la columna PROYECTO.
+// "MEDIA TENSIÓN" / "Media Tension" / "media tension" → "Media Tension"
+// VESTIGIOS ARQUEOLÓGICOS / ente=INAH → "Inah" (para que use el ícono triangular café).
+var proyectoAlias={
+  'media tension':'Media Tension','media tensión':'Media Tension',
+  'alta tension':'Alta Tension','alta tensión':'Alta Tension',
+  'baja tension':'Baja Tension','baja tensión':'Baja Tension',
+  'telecomunicaciones':'Telecomunicaciones','telecom':'Telecomunicaciones',
+  'gasoducto':'Gasoducto','gas':'Gasoducto',
+  'agua potable':'Agua Potable','agua':'Agua Potable',
+  'hidrocarburo':'Hidrocarburo','hidrocarburos':'Hidrocarburo',
+  'drenaje':'Drenaje',
+  'servicios municipales':'Servicios municipales','servicios municipal':'Servicios municipales',
+  'servicios privados':'Servicios privados',
+  'inah':'Inah','vestigios arqueologicos':'Inah','vestigios arqueológicos':'Inah'
+};
+function classifyTipo(row,sourceAdapter){
+  // Normaliza ENTE quitando puntos y espacios para tolerar "I.N.A.H.", "I N A H", etc.
+  var enteRaw=(row['ENTE RESPONSABLE']||'').toString().trim().toUpperCase();
+  var enteFlat=enteRaw.replace(/[.\s\-_]/g,'');
+  var activo=(row['TIPO ACTIVO AFECTADO']||'').toString().trim().toUpperCase();
+  if(enteFlat==='INAH'||enteFlat.indexOf('INSTITUTONACIONALDEANTROPOLOG')!==-1)return 'Inah';
+  if(/ARQUEOL|VESTIGIO|MONUMENTO|PATRIMONIO/.test(activo))return 'Inah';
+  if(sourceAdapter==='inah')return 'Inah'; // fallback: cualquier fila de un CSV marcado como INAH cuenta como INAH
+  var p=(row['PROYECTO']||'').toString().trim().toLowerCase();
+  return proyectoAlias[p]||row['PROYECTO']||'';
+}
+
+// Estatus: las hojas nuevas aún no tienen columna ESTATUS. Heurística temporal:
+// si las observaciones contienen "liberado" → Concluida; default → Identificada.
+// (TODO: agregar columna ESTATUS explícita en las hojas y eliminar esta heurística.)
+function deriveEstatus(observaciones){
+  if(!observaciones)return 'Identificada';
+  var s=observaciones.toString().toLowerCase();
+  if(s.indexOf('liberado')!==-1||s.indexOf('concluid')!==-1)return 'Concluida';
+  if(s.indexOf('suspendid')!==-1||s.indexOf('cancelad')!==-1)return 'Suspendida';
+  if(s.indexOf('ejecuci')!==-1||s.indexOf('en proceso')!==-1||s.indexOf('gestion')!==-1||s.indexOf('gestión')!==-1)return 'Gestión / Ejecución';
+  return 'Identificada';
+}
+
+function normCriticidad(c){
+  var s=(c||'').toString().trim().toUpperCase();
+  if(s==='SÍ'||s==='SI')return 'SI';
+  if(s==='NO'||s==='')return 'NO';
+  return s;
+}
+function normPK(pk){return(pk||'').toString().replace(/\s+/g,'');}
+
+// Parser unificado para el esquema actual de Google Sheets (idéntico entre
+// obras inducidas estándar e INAH). Soporta agrupamiento de filas con ID
+// vacío como vértices adicionales (V2, V3...) que se unen como polígono
+// cerrado a la obra anterior — caso típico de los datasets INAH.
+function parseObras(rows,sourceAdapter){
+  var out=[],current=null;
+  rows.forEach(function(row){
+    var id=(row['ID OBRA INDUCIDA']||'').toString().trim();
+    var ll=rowToLatLon(row['COORD INI LAT'],row['COORD INI LONG']);
+    if(!id){
+      // fila sin ID → vértice adicional de la obra anterior
+      if(current&&ll)current._vertices.push([ll.lat,ll.lon]);
+      return;
+    }
+    if(!ll)return; // fila con ID pero sin coord parseable → la salta
+    var llFin=rowToLatLon(row['COORD FIN LAT'],row['COORD FIN LONG']);
+    var tipo=classifyTipo(row,sourceAdapter);
+    current={
+      id:id,
+      proyecto:tipo,
+      tramo:(row['TRAMO']||'').toString().trim(),
+      pk_ini:normPK(row['PK INICIAL']),
+      pk_fin:normPK(row['PK FINAL']||row['PK INICIAL']),
+      estado:(row['ESTADO']||'').toString().trim(),
+      municipio:(row['MUNICIPIO']||'').toString().trim(),
+      localidad:(row['LOCALIDAD']||'').toString().trim(),
+      lat_ini:ll.lat,lon_ini:ll.lon,
+      lat_fin:llFin?llFin.lat:ll.lat,lon_fin:llFin?llFin.lon:ll.lon,
+      ente:(row['ENTE RESPONSABLE']||'').toString().trim(),
+      tipo_activo:(row['TIPO ACTIVO AFECTADO']||'').toString().trim(),
+      tipo_obra:(row['TIPO OBRA INDUCIDA']||'').toString().trim(),
+      descripcion:(row['DESCRIPCIÓN']||row['DESCRIPCION']||'').toString().trim(),
+      monto:(row['MONTO ESTIMADO \n($MDP)']||row['MONTO ESTIMADO ($MDP)']||row['MONTO ESTIMADO']||'').toString().trim(),
+      criticidad:normCriticidad(row['CRITICIDAD']),
+      riesgo:(row['RIESGO']||'').toString().trim().toUpperCase(),
+      responsable:(row['RESPONSABLE INTERNO']||row['RESPONSABLE']||'').toString().trim(),
+      fecha:(row['FECHA']||'').toString().trim(),
+      observaciones:(row['OBSERVACIONES GENERALES']||'').toString().trim(),
+      estatus:deriveEstatus(row['OBSERVACIONES GENERALES']),
+      utm_ie:NaN,utm_in:NaN, // se calculan más abajo a partir de lat/lon
+      _vertices:[[ll.lat,ll.lon]]
+    };
+    if(llFin&&(llFin.lat!==ll.lat||llFin.lon!==ll.lon))current._vertices.push([llFin.lat,llFin.lon]);
+    out.push(current);
+  });
+  // Finalizar: si una obra tiene >=3 vértices únicos → polygon. Si tiene 2 → line (ya cubierto por lat_ini/fin). Si tiene 1 → punto.
+  // También derivamos UTM Zona 14N desde lat/lon para que la ficha técnica siga
+  // mostrando la sección "UTM Zona 14N" como en la versión legacy.
+  out.forEach(function(o){
+    var uniq=[];
+    o._vertices.forEach(function(v){
+      if(!uniq.some(function(u){return u[0]===v[0]&&u[1]===v[1]}))uniq.push(v);
+    });
+    o.polygon=uniq.length>=3?uniq:null;
+    delete o._vertices;
+    if(typeof proj4!=='undefined'&&!isNaN(o.lat_ini)&&!isNaN(o.lon_ini)){
+      var u=proj4('EPSG:4326','EPSG:32614',[o.lon_ini,o.lat_ini]);
+      o.utm_ie=u[0];o.utm_in=u[1];
+    }
+  });
+  return out;
+}
+
+// Carga uno o varios CSVs publicados (cada uno con su adapter), los
+// procesa con la lógica de su esquema y concatena las obras resultantes.
+function loadFromSources(sources){
+  var status=document.getElementById('project-load-status');
+  var label=document.getElementById('project-load-label');
+  status.classList.add('visible');
+  label.textContent='Cargando '+sources.length+' fuente'+(sources.length===1?'':'s')+'…';
+  return Promise.all(sources.map(function(s){
+    return fetch(s.url).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status+' en '+s.url);return r.text();})
+      .then(function(text){return parseObras(parseCSV(text),s.adapter);});
+  })).then(function(parsedPerSource){
+    obras=[];parsedPerSource.forEach(function(arr){arr.forEach(function(o){obras.push(o);});});
+    document.getElementById('legend-items').innerHTML='';
+    ['filter-proyecto','filter-ente'].forEach(function(id){
+      var sel=document.getElementById(id);
+      sel.innerHTML='<option value="TODOS">Todos</option>';
+    });
+    ['filter-proyecto','filter-ente','filter-criticidad','filter-riesgo','filter-estatus'].forEach(function(id){document.getElementById(id).value='TODOS';});
+    refreshPKRange();
+    buildLegend();buildFilters();onPKSlider();
+    status.classList.remove('visible');
+  }).catch(function(err){
+    console.error('Error cargando datos:',err);
+    label.textContent='Error: '+err.message;
+    setTimeout(function(){status.classList.remove('visible');},4000);
+  });
+}
+
+// Recolecta recursivamente todas las fuentes cargables bajo un nodo del
+// catálogo. Cada fuente lleva su adapter para que parseObras pueda aplicar
+// la heurística correcta (ej. forzar tipo Inah a todas las filas de un CSV INAH).
+function collectSources(node){
+  var srcs=[];
+  if(node.url)srcs.push({url:node.url,adapter:node.adapter});
+  if(node.children)Object.keys(node.children).forEach(function(k){srcs=srcs.concat(collectSources(node.children[k]));});
+  return srcs;
+}
+function isLoadable(node){return collectSources(node).length>0;}
+
+// Construye el menú jerárquico de "Proyectos" a partir de window.DATA_SOURCES.
+// Acordeón vertical (mismo comportamiento en desktop y móvil).
+function buildProjectMenu(){
+  var root=document.getElementById('project-menu');
+  root.innerHTML='';
+  function renderLevel(container,nodes,path){
+    var keys=Object.keys(nodes);
+    if(keys.length===0){
+      var em=document.createElement('div');em.className='project-empty';em.textContent='(pendiente)';
+      container.appendChild(em);return;
+    }
+    keys.forEach(function(k){
+      var node=nodes[k];
+      var hasChildren=node.children&&Object.keys(node.children).length>0;
+      var loadable=isLoadable(node);
+      var row=document.createElement('div');
+      row.className='project-option';
+      if(hasChildren)row.classList.add('has-children');
+      if(!loadable&&!hasChildren)row.classList.add('disabled');
+      // Si es categoría con hijos, mostrar caret expandible Y permitir click "Todos" en el label
+      var labelTxt=document.createElement('span');labelTxt.textContent=node.label;
+      row.appendChild(labelTxt);
+      if(hasChildren){
+        var chev=document.createElement('span');chev.className='chev';chev.textContent='▸';
+        row.appendChild(chev);
+      }
+      container.appendChild(row);
+      if(hasChildren){
+        var children=document.createElement('div');
+        children.className='project-children';
+        container.appendChild(children);
+        // Primera entrada del submenu: "Todos" → carga todas las URLs cargables del nodo
+        var allRow=document.createElement('div');allRow.className='project-option';
+        var allLabel=document.createElement('span');allLabel.textContent='Todos';
+        allRow.appendChild(allLabel);
+        if(!loadable){allRow.classList.add('disabled');}
+        else{
+          allRow.onclick=function(ev){ev.stopPropagation();selectNode(node,path.concat([k,'todos']));};
+        }
+        children.appendChild(allRow);
+        renderLevel(children,node.children,path.concat([k]));
+        // Click en la fila padre: expandir/colapsar (NO carga). Cierra hermanos
+        // del mismo nivel para evitar que se traslapen submenús laterales.
+        row.onclick=function(ev){
+          ev.stopPropagation();
+          var willOpen=!row.classList.contains('expanded');
+          // colapsa hermanos has-children del mismo container y sus descendientes
+          Array.prototype.forEach.call(container.children,function(sib){
+            if(sib!==row&&sib!==children&&sib.classList&&sib.classList.contains('has-children')){
+              sib.classList.remove('expanded');
+            }
+          });
+          Array.prototype.forEach.call(container.children,function(sib){
+            if(sib!==children&&sib.classList&&sib.classList.contains('project-children')){
+              sib.classList.remove('expanded');
+              sib.querySelectorAll('.expanded').forEach(function(d){d.classList.remove('expanded');});
+            }
+          });
+          if(willOpen){
+            row.classList.add('expanded');
+            children.classList.add('expanded');
+            if(window.innerWidth>768){children.style.top=row.offsetTop+'px';}
+            else{children.style.top='';}
+          }else{
+            row.classList.remove('expanded');
+            children.classList.remove('expanded');
+            children.querySelectorAll('.expanded').forEach(function(d){d.classList.remove('expanded');});
+          }
+        };
+      }else if(loadable){
+        row.onclick=function(ev){ev.stopPropagation();selectNode(node,path.concat([k]));};
+      }
+    });
+  }
+  renderLevel(root,window.DATA_SOURCES,[]);
+}
+
+// Activa un nodo del catálogo y carga sus datos. Marca la opción activa en el menú.
+var currentPath=null;
+function closeProjectMenu(){
+  var menu=document.getElementById('project-menu');
+  menu.classList.remove('open');
+  menu.querySelectorAll('.expanded').forEach(function(el){el.classList.remove('expanded');});
+}
+function selectNode(node,path){
+  currentPath=path;
+  var srcs=collectSources(node);
+  document.querySelectorAll('#project-menu .project-option').forEach(function(el){el.classList.remove('active');});
+  closeProjectMenu();
+  if(srcs.length===0)return;
+  loadFromSources(srcs);
+}
+
+function toggleProjectMenu(e){e.stopPropagation();var m=document.getElementById('project-menu');if(m.classList.contains('open'))closeProjectMenu();else m.classList.add('open');}
+document.addEventListener('click',closeProjectMenu);
+
+// Arranque: construye menú y carga por default el primer proyecto del catálogo
+// que tenga al menos una URL cableada.
+buildProjectMenu();
+(function(){
+  var keys=Object.keys(window.DATA_SOURCES);
+  for(var i=0;i<keys.length;i++){
+    var node=window.DATA_SOURCES[keys[i]];
+    if(isLoadable(node)){selectNode(node,[keys[i],'todos']);return;}
+  }
+  console.warn('No hay fuentes cargables todavía en data-sources.js');
+})();
+function closeMobileDrawers(){
+var p=document.querySelector('.panel'),l=document.querySelector('.legend');
+var fp=document.getElementById('fab-filters'),fl=document.getElementById('fab-legend');
+p.classList.remove('mobile-open');l.classList.remove('mobile-open');
+fp.classList.remove('active');fl.classList.remove('active');
+}
+function toggleMobilePanel(){
+var p=document.querySelector('.panel'),l=document.querySelector('.legend');
+var fp=document.getElementById('fab-filters'),fl=document.getElementById('fab-legend');
+var opening=!p.classList.contains('mobile-open');
+l.classList.remove('mobile-open');fl.classList.remove('active');
+p.classList.toggle('mobile-open',opening);fp.classList.toggle('active',opening);
+}
+function toggleMobileLegend(){
+var p=document.querySelector('.panel'),l=document.querySelector('.legend');
+var fp=document.getElementById('fab-filters'),fl=document.getElementById('fab-legend');
+var opening=!l.classList.contains('mobile-open');
+p.classList.remove('mobile-open');fp.classList.remove('active');
+l.classList.toggle('mobile-open',opening);fl.classList.toggle('active',opening);
+}
+map.on('click',closeMobileDrawers);
+</script>
+</body>
+</html>
