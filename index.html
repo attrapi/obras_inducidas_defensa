@@ -116,6 +116,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5}
 .switch.on .switch-knob{left:18px}
 .project-bubble{position:relative;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.45);border-radius:20px;padding:4px 12px;cursor:pointer;font-size:13px;font-weight:600;color:#fff;user-select:none;transition:background 0.2s}
 .project-bubble:hover{background:rgba(255,255,255,0.3)}
+.project-bubble-label{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .project-menu{display:none;position:absolute;top:calc(100% + 8px);left:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.15);min-width:240px;z-index:2000;padding:4px 0}
 .project-menu.open{display:block}
 .project-option{padding:9px 16px;font-size:12px;color:#444;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap;user-select:none}
@@ -145,6 +146,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5}
 .header{padding:10px 12px;flex-wrap:wrap;gap:8px;align-items:flex-start}
 .header h1{font-size:15px!important}
 .project-bubble{font-size:11px;padding:3px 10px}
+.project-bubble-label{max-width:min(150px,38vw)}
 .stats{gap:8px;flex:1 1 100%;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding:2px 0;scrollbar-width:none;justify-content:flex-start}
 .stats::-webkit-scrollbar{display:none}
 .stat{flex-shrink:0;padding:3px 8px}
@@ -178,7 +180,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5}
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
 <h1 style="color:#fff;font-size:18px;font-weight:600;margin:0">Obras Inducidas | Defensa</h1>
 <div class="project-bubble" onclick="toggleProjectMenu(event)">
-<span>Proyectos</span><span style="font-size:10px;opacity:0.8">▾</span>
+<span class="project-bubble-label" id="project-bubble-label">Proyectos</span><span style="font-size:10px;opacity:0.8">▾</span>
 <div class="project-menu" id="project-menu" onclick="event.stopPropagation()"></div>
 </div>
 <div class="project-load-status" id="project-load-status"><span class="spinner"></span><span id="project-load-label">Cargando…</span></div>
@@ -544,6 +546,28 @@ function loadGeo(base){
 // Encuadra el mapa sobre las capas visibles del proyecto.
 map.on('zoomend',syncPKLabels);
 
+// Opciones de encuadre. El padding reserva el espacio que tapan los paneles
+// flotantes (filtros a la derecha, leyenda/capas a la izquierda), pero si la
+// ventana es más chica que ese margen —ventana baja, móvil apaisado— la suma
+// deja un área útil de cero o negativa y Leaflet responde con el zoom máximo,
+// que aterriza a nivel calle. Por eso se recorta a dos tercios de cada eje.
+function fitOpciones(){
+  var sz=map.getSize(),isMobile=window.innerWidth<=768;
+  var tl=isMobile?[20,150]:[250,90];
+  var br=isMobile?[20,60]:[310,30];
+  function tope(a,b,eje){
+    var max=eje*2/3,suma=a+b;
+    if(suma<=max||suma===0)return[a,b];
+    var f=max/suma;
+    return[Math.floor(a*f),Math.floor(b*f)];
+  }
+  var x=tope(tl[0],br[0],sz.x),y=tope(tl[1],br[1],sz.y);
+  // animate:false a propósito: este encuadre es programático (al abrir un
+  // proyecto o al filtrar), no un gesto del usuario, y conviene que sea
+  // instantáneo y determinista en vez de una transición de varios niveles.
+  return{animate:false,paddingTopLeft:[x[0],y[0]],paddingBottomRight:[x[1],y[1]]};
+}
+
 function fitGeo(){
   var bounds=null;
   Object.keys(geoLayers).forEach(function(k){
@@ -553,11 +577,7 @@ function fitGeo(){
     bounds=bounds?bounds.extend(b):L.latLngBounds(b.getSouthWest(),b.getNorthEast());
   });
   if(!bounds||!bounds.isValid())return;
-  var isMobile=window.innerWidth<=768;
-  // animate:false a propósito: este encuadre es programático (al abrir un
-  // proyecto), no un gesto del usuario, y conviene que sea instantáneo y
-  // determinista en vez de una transición de varios niveles de zoom.
-  map.fitBounds(bounds,{animate:false,paddingTopLeft:isMobile?[20,150]:[250,90],paddingBottomRight:isMobile?[20,60]:[310,30]});
+  map.fitBounds(bounds,fitOpciones());
 }
 
 var layers=[],markers=[];
@@ -714,8 +734,7 @@ if(!isNaN(o.lat_fin)&&!isNaN(o.lon_fin)&&inMX(o.lat_fin,o.lon_fin)&&(o.lat_ini!=
 });
 if(bn.length<2){bn=pkMarkers.map(function(p){return[p.lat,p.lon];});}
 if(bn.length<1)return; // sin obras ni cadenamientos no hay nada que encuadrar
-var isMobile=window.innerWidth<=768;
-map.fitBounds(bn,{animate:false,paddingTopLeft:isMobile?[20,150]:[250,90],paddingBottomRight:isMobile?[20,60]:[310,30]});
+map.fitBounds(bn,fitOpciones());
 }
 }
 function fmtPK(v){var k=Math.floor(v);var m=Math.round((v-k)*1000);return 'PK '+k+'+'+(m<100?(m<10?'00'+m:'0'+m):m);}
@@ -995,6 +1014,7 @@ function buildProjectMenu(){
         var allRow=document.createElement('div');allRow.className='project-option';
         var allLabel=document.createElement('span');allLabel.textContent='Todos';
         allRow.appendChild(allLabel);
+        allRow.dataset.path=path.concat([k,'todos']).join('/');
         if(!loadable){allRow.classList.add('disabled');}
         else{
           allRow.onclick=function(ev){ev.stopPropagation();selectNode(node,path.concat([k,'todos']));};
@@ -1030,15 +1050,49 @@ function buildProjectMenu(){
           }
         };
       }else if(loadable){
+        row.dataset.path=path.concat([k]).join('/');
         row.onclick=function(ev){ev.stopPropagation();selectNode(node,path.concat([k]));};
       }
     });
   }
   renderLevel(root,window.DATA_SOURCES,[]);
+  markActiveOption();
 }
 
-// Activa un nodo del catálogo y carga sus datos. Marca la opción activa en el menú.
+// Activa un nodo del catálogo y carga sus datos.
 var currentPath=null;
+
+// Recorre el catálogo siguiendo un path y devuelve las etiquetas que atraviesa,
+// para armar la miga de pan de la píldora. La llave 'todos' no es un nodo, es el
+// marcador de "todo lo que cuelga de aquí", así que no aporta etiqueta.
+function pathLabels(path){
+  var labels=[],nodes=window.DATA_SOURCES;
+  (path||[]).forEach(function(k){
+    if(k==='todos'||!nodes||!nodes[k])return;
+    labels.push(nodes[k].label);
+    nodes=nodes[k].children;
+  });
+  return labels;
+}
+
+// La píldora muestra qué mapa se está viendo. El caret se queda aparte en el
+// markup, así que sigue ahí para volver a abrir el menú y cambiar de proyecto.
+function syncProjectBubble(){
+  var el=document.getElementById('project-bubble-label');
+  var labels=pathLabels(currentPath);
+  el.textContent=labels.length?labels.join(' · '):'Proyectos';
+  el.title=labels.length?labels.join(' · '):'';
+}
+
+// Marca en el menú la opción del proyecto activo. Se llama también al construir
+// el menú, para que un rebuild no pierda la selección.
+function markActiveOption(){
+  var menu=document.getElementById('project-menu');
+  menu.querySelectorAll('.project-option').forEach(function(el){el.classList.remove('active');});
+  if(!currentPath)return;
+  var row=menu.querySelector('.project-option[data-path="'+currentPath.join('/')+'"]');
+  if(row)row.classList.add('active');
+}
 function closeProjectMenu(){
   var menu=document.getElementById('project-menu');
   menu.classList.remove('open');
@@ -1047,7 +1101,8 @@ function closeProjectMenu(){
 function selectNode(node,path){
   currentPath=path;
   var srcs=collectSources(node);
-  document.querySelectorAll('#project-menu .project-option').forEach(function(el){el.classList.remove('active');});
+  syncProjectBubble();
+  markActiveOption();
   closeProjectMenu();
   // La cartografía y las obras son independientes: un corredor puede tener
   // trazo sin hoja cableada todavía (o al revés).
@@ -1067,14 +1122,20 @@ function selectNode(node,path){
 function toggleProjectMenu(e){e.stopPropagation();var m=document.getElementById('project-menu');if(m.classList.contains('open'))closeProjectMenu();else m.classList.add('open');}
 document.addEventListener('click',closeProjectMenu);
 
-// Arranque: construye menú y carga por default el primer proyecto del catálogo
-// que tenga al menos una URL cableada.
+// Arranque: construye menú y abre por default el primer proyecto seleccionable
+// del catálogo (el que tenga hoja cableada o cartografía propia).
 buildProjectMenu();
 (function(){
   var keys=Object.keys(window.DATA_SOURCES);
   for(var i=0;i<keys.length;i++){
     var node=window.DATA_SOURCES[keys[i]];
-    if(isLoadable(node)){selectNode(node,[keys[i],'todos']);return;}
+    if(!isLoadable(node))continue;
+    // El sufijo 'todos' solo aplica a un nodo con hijos: es su fila "Todos" del
+    // submenú. Para un corredor sin hijos el path es la llave sola, y tiene que
+    // coincidir con el data-path de su fila o no se marca como activo.
+    var tieneHijos=node.children&&Object.keys(node.children).length>0;
+    selectNode(node,tieneHijos?[keys[i],'todos']:[keys[i]]);
+    return;
   }
   console.warn('No hay fuentes cargables todavía en data-sources.js');
 })();
